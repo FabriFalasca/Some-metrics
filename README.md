@@ -3,5 +3,6 @@ Metrics to compare functional networks.
 
 ### NOTE: Under construction
 
-Here you will find metrics to compare networks between functional domains.
-The netCorr metric is in this depository.
+- Similarity metric in net_Similarity.nb notebook. If you do not have Mathematica but (for some obscure reasons) still want to "give a look" to the code  please open the pdf "net_Similarity.pdf".
+
+

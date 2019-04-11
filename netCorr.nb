@@ -1,0 +1,2229 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 11.1' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     97496,       2221]
+NotebookOptionsPosition[     94927,       2170]
+NotebookOutlinePosition[     95365,       2189]
+CellTagsIndexPosition[     95322,       2186]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{"ClearAll", "[", "\"\<Global`*\>\"", "]"}]], "Input",
+ CellChangeTimes->{{3.727131010636983*^9, 
+  3.727131019259403*^9}},ExpressionUUID->"8a35848a-77d6-4996-bd0d-\
+ec477ad71b31"],
+
+Cell["\<\
+Author: Fabrizio Falasca
+Email: fabrifalasca@gmail.com
+
+netCorr: notion of correlation between functional networks. \
+\>", "Text",
+ CellChangeTimes->{{3.728560483965349*^9, 3.7285606046432457`*^9}, {
+  3.758892507286319*^9, 
+  3.7588925469632187`*^9}},ExpressionUUID->"7d7d51e0-4844-4130-b4de-\
+37966333e29e"],
+
+Cell[CellGroupData[{
+
+Cell["Some GLOBAL definitions", "Subsubsection",
+ CellChangeTimes->{{3.728561768312317*^9, 
+  3.728561775904619*^9}},ExpressionUUID->"e5c9b2fe-725e-45da-96d7-\
+4293e1e578bd"],
+
+Cell["\<\
+Files you should have in this folder:
+
+- The file COBE_bilinear _sst _ 1980_ 2015.mat contains the linearly \
+detrended anomalies for the COBEv2 datasets. It is formatted in this way:
+size(COBE_bilinear _sst _ 1980_ 2015.mat) = [time, dimY, dimX]
+
+- domains found for the COBEv2 (HadISST) datasets
+- networks found for the COBEv2 (HadISST) datasets
+- a list of strengths assigned to each domain in COBEv2 (HadISST)\
+\>", "Text",
+ CellChangeTimes->{{3.763998320889578*^9, 3.763998484562482*^9}, {
+  3.7639985170462103`*^9, 
+  3.763998547798212*^9}},ExpressionUUID->"13fc228e-affd-47c9-898e-\
+dba3c9303592"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{"path", " ", "to", " ", "land"}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"pathLand", "=", 
+     RowBox[{"StringJoin", "[", 
+      RowBox[{
+       RowBox[{"NotebookDirectory", "[", "]"}], ",", 
+       "\"\<COBE/COBE_bilinear_sst_1980_2015.mat\>\""}], "]"}]}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{"Importing", " ", "the", " ", 
+     RowBox[{"land", ":", " ", 
+      RowBox[{
+      "I", " ", "always", " ", "use", " ", "the", " ", "COBEv2", " ", 
+       "land"}]}]}], "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"timeSeries", "=", 
+     RowBox[{
+      RowBox[{"Import", "[", 
+       RowBox[{"pathLand", ",", "\"\<Data\>\""}], "]"}], "[", 
+      RowBox[{"[", 
+       RowBox[{"1", ",", "1"}], "]"}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+   
+   RowBox[{"(*", 
+    RowBox[{
+     RowBox[{
+      RowBox[{
+       RowBox[{
+       "Define", " ", "the", " ", "land", " ", "as", " ", "Indeterminate"}], 
+       "..."}], "I", " ", "know", " ", "already", " ", "that", " ", "the", 
+      " ", "land", " ", "\[IndentingNewLine]", "is", " ", "masked", " ", 
+      "with", " ", "the", " ", "value"}], " ", "-", "1000000"}], 
+    "\[IndentingNewLine]", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"land1", "=", 
+     RowBox[{"timeSeries", "/.", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"x_", "/;", 
+          RowBox[{"x", "<", 
+           RowBox[{"-", "100"}]}]}], "\[Rule]", "Indeterminate"}], ",", 
+        RowBox[{
+         RowBox[{"x_", "/;", 
+          RowBox[{"x", ">", 
+           RowBox[{"-", "100"}]}]}], "\[Rule]", "0"}]}], "}"}]}]}], 
+    ";"}]}]}]], "Input",
+ CellChangeTimes->{{3.728563289962412*^9, 3.728563290770356*^9}, 
+   3.728767114508062*^9},
+ CellLabel->
+  "In[170]:=",ExpressionUUID->"46ef9274-c61c-4336-b1ff-695f3a9a5ad3"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+   "Defining", " ", "PATHS", " ", "and", " ", "dimension", " ", "of", " ", 
+    "the", " ", "map"}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{
+    "We", " ", "need", " ", "the", " ", "path", " ", "for", " ", "domains"}], 
+    ",", " ", "networks", ",", " ", "strengths"}], "*)"}], 
+  "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      RowBox[{"**", "**"}], "**", "**", "**", "**", "**", "**"}], "**", "**", 
+     "**", "**", "**", "**", "**", "**", "**"}], "*", " ", "DATASET", " ", 
+    RowBox[{"1", " ", "**", "**", "**"}], "*", "*", 
+    RowBox[{
+    "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", 
+     "**"}]}], "******)"}], "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{"path", " ", "to", " ", "domains"}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"pathDomainCOBE", "=", 
+     RowBox[{"FileNames", "[", 
+      RowBox[{
+       RowBox[{"{", "\"\<domain*\>\"", "}"}], ",", 
+       RowBox[{"StringJoin", "[", 
+        RowBox[{
+         RowBox[{"NotebookDirectory", "[", "]"}], ",", 
+         "\"\<COBE/domains/\>\""}], "]"}]}], "]"}]}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{"path", " ", "to", " ", "network"}], "*)"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"pathNetworkCOBE", "=", 
+     RowBox[{"StringJoin", "[", 
+      RowBox[{
+       RowBox[{"NotebookDirectory", "[", "]"}], ",", 
+       "\"\<COBE/network.txt\>\""}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{"Path", " ", "to", " ", "Strenghts"}], "*)"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"pathStrengthsCOBE", "=", 
+     RowBox[{"StringJoin", "[", 
+      RowBox[{
+       RowBox[{"NotebookDirectory", "[", "]"}], ",", 
+       "\"\<COBE/strengths.txt\>\""}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+   
+   RowBox[{"(*", 
+    RowBox[{
+     RowBox[{
+     "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**",
+       "**", "**", "**", "**"}], "*", " ", "DATASET", " ", 
+     RowBox[{"2", " ", "**", "**", "**"}], "*", "*", 
+     RowBox[{
+     "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", 
+      "**"}]}], "******)"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{"path", " ", "to", " ", "domains"}], "*)"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"pathDomainHadISST", "=", 
+     RowBox[{"FileNames", "[", 
+      RowBox[{
+       RowBox[{"{", "\"\<domain*\>\"", "}"}], ",", 
+       RowBox[{"StringJoin", "[", 
+        RowBox[{
+         RowBox[{"NotebookDirectory", "[", "]"}], ",", 
+         "\"\<HadISST/domains/\>\""}], "]"}]}], "]"}]}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{"path", " ", "to", " ", "network"}], "*)"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"pathNetworkHadISST", "=", 
+     RowBox[{"StringJoin", "[", 
+      RowBox[{
+       RowBox[{"NotebookDirectory", "[", "]"}], ",", 
+       "\"\<HadISST/network.txt\>\""}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{"Path", " ", "to", " ", "Strenghts"}], "*)"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"pathStrengthsHadISST", "=", 
+     RowBox[{"StringJoin", "[", 
+      RowBox[{
+       RowBox[{"NotebookDirectory", "[", "]"}], ",", 
+       "\"\<HadISST/strengths.txt\>\""}], "]"}]}], ";"}], 
+   "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{"Dimensions", " ", "of", " ", "the", " ", "maps"}], "*)"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"dimX", "=", "288"}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"dimY", "=", "180"}], ";"}]}]}]], "Input",
+ CellChangeTimes->{{3.7285605420815887`*^9, 3.72856055592566*^9}, {
+   3.728560610286277*^9, 3.728560614451095*^9}, {3.728560650913465*^9, 
+   3.728560702151263*^9}, {3.728560736741591*^9, 3.728560751815974*^9}, {
+   3.72856082401858*^9, 3.728560830447853*^9}, 3.72856093335812*^9, {
+   3.7285609724825478`*^9, 3.728560981591715*^9}, {3.7285612290642357`*^9, 
+   3.728561230267221*^9}, {3.7285632061536903`*^9, 3.728563212763179*^9}, {
+   3.7285632725404*^9, 3.728563327414105*^9}, {3.7285634169177856`*^9, 
+   3.72856343757498*^9}, {3.72856347665739*^9, 3.728563483005496*^9}, 
+   3.7285636192071333`*^9},
+ CellLabel->
+  "In[174]:=",ExpressionUUID->"a3982140-f113-4ee7-b79e-36ce53f80c30"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{"Step", " ", "2"}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+   "we", " ", "want", " ", "to", " ", "check", " ", "how", " ", "the", " ", 
+    "domains", " ", "are", " ", 
+    RowBox[{"defined", ":", " ", 
+     RowBox[{
+     "we", " ", "want", " ", "them", " ", "not", " ", "to", " ", "be", " ", 
+      "reversed"}]}]}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+   "I", " ", "look", " ", "at", " ", "some", " ", "domains", " ", "for", " ", 
+    "both", " ", "datasets"}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{
+    "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**",
+      "**", "**", "**", "**"}], "*", " ", "DATASET", " ", 
+    RowBox[{"1", " ", "**", "**", "**"}], "*", "*", 
+    RowBox[{
+    "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", 
+     "**"}]}], "******)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"preDomainsJustALookCOBE", "=", "\[IndentingNewLine]", 
+     RowBox[{"Partition", "[", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"ToExpression", "[", "\[IndentingNewLine]", 
+        RowBox[{"Import", "[", 
+         RowBox[{
+          RowBox[{"pathDomainCOBE", "[", 
+           RowBox[{"[", "3", "]"}], "]"}], ",", "\"\<Words\>\""}], "]"}], 
+        "\[IndentingNewLine]", "]"}], ",", 
+       RowBox[{"{", "288", "}"}]}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{
+     RowBox[{
+     "OK", " ", "domains", " ", "from", " ", "DATA1", " ", "are", " ", 
+      "upsided", " ", "down"}], ",", " ", 
+     RowBox[{
+      RowBox[{"let", "'"}], "s", " ", "flip", " ", "it", " ", "when", " ", 
+      "we", " ", "download", " ", "them"}]}], "*)"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{
+     RowBox[{
+     "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**",
+       "**", "**", "**", "**"}], "*", " ", "DATASET", " ", 
+     RowBox[{"2", " ", "**", "**", "**"}], "*", "*", 
+     RowBox[{
+     "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", 
+      "**"}]}], "******)"}], 
+   RowBox[{
+    RowBox[{"preDomainsJustALookHadISST", "=", "\[IndentingNewLine]", 
+     RowBox[{"Partition", "[", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"ToExpression", "[", "\[IndentingNewLine]", 
+        RowBox[{"Import", "[", 
+         RowBox[{
+          RowBox[{"pathDomainHadISST", "[", 
+           RowBox[{"[", "5", "]"}], "]"}], ",", "\"\<Words\>\""}], "]"}], 
+        "\[IndentingNewLine]", "]"}], ",", 
+       RowBox[{"{", "288", "}"}]}], "]"}]}], ";"}]}]}]], "Input",
+ CellChangeTimes->{{3.728560866055183*^9, 3.728561084527699*^9}, {
+  3.7285631803356047`*^9, 3.728563184595162*^9}, {3.728563500808271*^9, 
+  3.728563529115726*^9}, {3.72856358931231*^9, 3.728563605947847*^9}},
+ CellLabel->
+  "In[183]:=",ExpressionUUID->"f627969a-90c4-4026-8b15-8024d5d646df"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{"Here", " ", "I", " ", "import", " ", "all", " ", "domains"}], 
+   "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{
+    "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**",
+      "**", "**", "**", "**"}], "*", " ", "DATASET", " ", 
+    RowBox[{"1", " ", "**", "**", "**"}], "*", "*", 
+    RowBox[{
+    "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", 
+     "**"}]}], "******)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"preDomainsCOBE", "=", "\[IndentingNewLine]", 
+     RowBox[{"Table", "[", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"Reverse", "[", 
+        RowBox[{"(*", 
+         RowBox[{"FLIPPING", " ", 
+          RowBox[{
+           RowBox[{"THEM", "!!"}], "!"}]}], "*)"}], "\[IndentingNewLine]", 
+        RowBox[{"Partition", "[", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"ToExpression", "[", "\[IndentingNewLine]", 
+           RowBox[{"Import", "[", 
+            RowBox[{
+             RowBox[{"pathDomainCOBE", "[", 
+              RowBox[{"[", "i", "]"}], "]"}], ",", "\"\<Words\>\""}], "]"}], 
+           "\[IndentingNewLine]", "]"}], ",", 
+          RowBox[{"{", "288", "}"}]}], "]"}], "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{"i", ",", "1", ",", 
+         RowBox[{"Length", "[", "pathDomainCOBE", "]"}]}], "}"}]}], "]"}]}], 
+    ";"}], "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{
+     RowBox[{
+     "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**",
+       "**", "**", "**", "**"}], "*", " ", "DATASET", " ", 
+     RowBox[{"2", " ", "**", "**", "**"}], "*", "*", 
+     RowBox[{
+     "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", "**", 
+      "**"}]}], "******)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"preDomainsHadISST", "=", "\[IndentingNewLine]", 
+     RowBox[{"Table", "[", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"Reverse", "[", 
+        RowBox[{"(*", 
+         RowBox[{"FLIPPING", " ", 
+          RowBox[{
+           RowBox[{"THEM", "!!"}], "!"}]}], "*)"}], "\[IndentingNewLine]", 
+        RowBox[{"Partition", "[", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"ToExpression", "[", "\[IndentingNewLine]", 
+           RowBox[{"Import", "[", 
+            RowBox[{
+             RowBox[{"pathDomainHadISST", "[", 
+              RowBox[{"[", "i", "]"}], "]"}], ",", "\"\<Words\>\""}], "]"}], 
+           "\[IndentingNewLine]", "]"}], ",", 
+          RowBox[{"{", "288", "}"}]}], "]"}], "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{"i", ",", "1", ",", 
+         RowBox[{"Length", "[", "pathDomainHadISST", "]"}]}], "}"}]}], 
+      "]"}]}], ";"}]}]}]], "Input",
+ CellChangeTimes->{{3.728561086195219*^9, 3.7285611025263166`*^9}, {
+  3.7285611525702744`*^9, 3.728561159018394*^9}, {3.728561729629036*^9, 
+  3.728561737342429*^9}, {3.728563175046385*^9, 3.728563175514399*^9}, {
+  3.7285633440305862`*^9, 3.7285633486405163`*^9}, {3.728563537647592*^9, 
+  3.7285635859953403`*^9}, {3.728563629030877*^9, 3.728563632253934*^9}, {
+  3.728563698650017*^9, 3.728563699239171*^9}},
+ CellLabel->
+  "In[185]:=",ExpressionUUID->"28973678-4d43-43f1-8f79-ee3f57e6f67e"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{"If", " ", "you", " ", "reverse", " ", "the", " ", "domains"}], 
+    ",", " ", 
+    RowBox[{
+    "make", " ", "sure", " ", "you", " ", "also", " ", "reverse", " ", "the", 
+     " ", "land"}]}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{"land", "=", 
+    RowBox[{"Reverse", "[", "land1", "]"}]}], ";"}]}]], "Input",
+ CellChangeTimes->{{3.728767122731045*^9, 3.7287671490851917`*^9}},
+ CellLabel->
+  "In[187]:=",ExpressionUUID->"b0be1dac-3b3d-4427-82cf-4ed88d10da50"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Computing \[OpenCurlyDoubleQuote]The Matrix\[CloseCurlyDoubleQuote]", \
+"Subsection",
+ CellChangeTimes->{{3.728561279733302*^9, 
+  3.728561285414446*^9}},ExpressionUUID->"f8ac7078-978f-479f-b95d-\
+f9ce6250e525"],
+
+Cell[CellGroupData[{
+
+Cell["Importing Function", "Subsubsection",
+ CellChangeTimes->{{3.728561288211842*^9, 3.7285612953262987`*^9}, {
+  3.7285614823214493`*^9, 
+  3.728561485736588*^9}},ExpressionUUID->"c6f5c329-9e71-4d04-8f71-\
+21e4cf344539"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"impStuffandDefining", "[", 
+   RowBox[{"pathNet_", ",", "pathStrength_", ",", "pathDomain_"}], "]"}], ":=",
+   "\[IndentingNewLine]", 
+  RowBox[{"Module", "[", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"net", ",", "strengths", ",", "domIDs", ",", "result"}], "}"}], 
+    ",", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"net", "=", 
+      RowBox[{"Import", "[", 
+       RowBox[{"pathNet", ",", "\"\<Data\>\""}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{
+       "These", " ", "strengths", " ", "could", " ", "be", " ", "modified", 
+        " ", "for", " ", "different", " ", "reasons"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+        "it", " ", "can", " ", "be", " ", "for", " ", "example", " ", "that", 
+         " ", "one", " ", "domain", " ", "does", " ", "not", " ", "have", " ",
+          "a", " ", "strength"}], "..."}]}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"strengths", "=", 
+      RowBox[{"Flatten", "[", 
+       RowBox[{"Import", "[", 
+        RowBox[{"pathStrength", ",", "\"\<Data\>\""}], "]"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{"Ids", " ", "of", " ", "every", " ", "domain"}], ",", " ", 
+       RowBox[{
+        RowBox[{
+        "in", " ", "the", " ", "same", " ", "order", " ", "I", " ", 
+         "downloaded", " ", "them", "\[IndentingNewLine]", "I", " ", "call", 
+         " ", "it", " ", "preDomIDs", " ", "because", " ", "it", " ", "will", 
+         " ", "re"}], "-", 
+        RowBox[{
+        "defined", " ", "for", " ", "the", " ", "case", " ", "in", " ", 
+         "which", " ", "one", " ", "or", " ", "more", " ", "domain", " ", 
+         "does", " ", "not", " ", "have", " ", "any", " ", 
+         RowBox[{"connection", "."}]}]}]}], "\[IndentingNewLine]", "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"domIDs", "=", "\[IndentingNewLine]", 
+      RowBox[{"ToExpression", "[", "\[IndentingNewLine]", 
+       RowBox[{"Table", "[", "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"StringSplit", "[", "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"StringSplit", "[", "\[IndentingNewLine]", 
+              RowBox[{
+               RowBox[{"Last", "[", "\[IndentingNewLine]", 
+                RowBox[{
+                 RowBox[{"StringSplit", "[", 
+                  RowBox[{
+                   RowBox[{"pathDomain", "[", 
+                    RowBox[{"[", "i", "]"}], "]"}], ",", "\"\</\>\""}], "]"}],
+                  ",", 
+                 RowBox[{"_", "?", "LetterQ"}]}], "]"}], ",", 
+               "\[IndentingNewLine]", "\"\<_\>\""}], "]"}], "[", 
+             RowBox[{"[", "2", "]"}], "]"}], ",", "\[IndentingNewLine]", 
+            "\"\<.\>\""}], "]"}], "[", 
+          RowBox[{"[", "1", "]"}], "]"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"i", ",", "1", ",", 
+           RowBox[{"Length", "[", "pathDomain", "]"}]}], "}"}]}], "]"}], 
+       "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"result", "=", 
+      RowBox[{"{", 
+       RowBox[{"net", ",", "strengths", ",", "domIDs"}], "}"}]}], ";", 
+     "\[IndentingNewLine]", "result"}]}], "\[IndentingNewLine]", 
+   "]"}]}]], "Input",
+ CellChangeTimes->{{3.728561296607389*^9, 3.728561342739799*^9}, {
+  3.72856137681269*^9, 3.728561499131472*^9}, {3.728561563743024*^9, 
+  3.728561608300337*^9}, {3.7285616974477243`*^9, 3.728561702334734*^9}, {
+  3.72856182988626*^9, 3.72856183449774*^9}, {3.72856187020514*^9, 
+  3.728561874417924*^9}, {3.728564562134691*^9, 3.7285645640108128`*^9}},
+ CellLabel->
+  "In[188]:=",ExpressionUUID->"3630b409-31ba-456c-9888-b09129e62e97"]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Some Useful Functions", "Subsubsection",
+ CellChangeTimes->{{3.7285627005812807`*^9, 
+  3.728562704273847*^9}},ExpressionUUID->"894049ca-2dbe-4eca-b3f1-\
+80e195af0307"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+   "We", " ", "need", " ", "a", " ", "function", " ", "such", " ", "that", 
+    " ", "given", " ", "a", " ", "list", " ", "of", " ", "values", " ", "it", 
+    " ", "chooses", " ", "the", " ", "one", " ", "that", " ", "is", " ", 
+    "largest", " ", "in", " ", "absolute", " ", "sense"}], "*)"}], 
+  "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"choosingTheStrongest", "[", "x_List", "]"}], ":=", 
+    "\[IndentingNewLine]", 
+    RowBox[{"Module", "[", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"absoluteList", ",", "absMax", ",", "posMax", ",", "result"}], 
+       "}"}], ",", "\[IndentingNewLine]", 
+      RowBox[{"(*", 
+       RowBox[{
+       "Function", " ", "that", " ", "given", " ", "a", " ", "list", " ", 
+        "choose", " ", "the", " ", "largest", " ", "number", " ", "in", " ", 
+        "absolute", " ", "value"}], "*)"}], "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"absoluteList", "=", 
+        RowBox[{"Abs", "[", "x", "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{"Max", " ", "in", " ", "absoluteList"}], "*)"}], 
+       "\[IndentingNewLine]", 
+       RowBox[{"absMax", "=", 
+        RowBox[{"Max", "[", "absoluteList", "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+        "Position", " ", "of", " ", "absMax", " ", "in", " ", 
+         "absoluteList"}], "*)"}], "\[IndentingNewLine]", 
+       RowBox[{"posMax", "=", 
+        RowBox[{
+         RowBox[{"Position", "[", 
+          RowBox[{"absoluteList", ",", "absMax"}], "]"}], "[", 
+         RowBox[{"[", 
+          RowBox[{"1", ",", "1"}], "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+        "Maximum", " ", "Value", " ", "in", " ", "Absolute", " ", "sense"}], 
+        "*)"}], "\[IndentingNewLine]", 
+       RowBox[{"result", "=", 
+        RowBox[{"x", "[", 
+         RowBox[{"[", "posMax", "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+       "result"}]}], "\[IndentingNewLine]", "]"}]}], "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{
+    "Function", " ", "that", " ", "gives", " ", "me", " ", "the", " ", 
+     "position", " ", "of", " ", "the", " ", "biggest", " ", "number", " ", 
+     "in", " ", "a", " ", "list"}], "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"posStrongest", "[", "x_List", "]"}], ":=", "\[IndentingNewLine]", 
+    RowBox[{"Module", "[", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"max", ",", "pos"}], "}"}], ",", "\[IndentingNewLine]", 
+      RowBox[{"(*", 
+       RowBox[{"Maximum", " ", "in", " ", "x"}], "*)"}], 
+      "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"max", "=", 
+        RowBox[{"Max", "[", "x", "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{"Position", " ", "of", " ", "max", " ", "in", " ", "x"}], 
+        "*)"}], "\[IndentingNewLine]", 
+       RowBox[{"pos", "=", 
+        RowBox[{
+         RowBox[{"Position", "[", 
+          RowBox[{"x", ",", "max"}], "]"}], "[", 
+         RowBox[{"[", 
+          RowBox[{"1", ",", "1"}], "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{"Return", " ", "the", " ", "position"}], "*)"}], 
+       "\[IndentingNewLine]", "pos"}]}], "\[IndentingNewLine]", 
+     "]"}]}]}]}]], "Input",
+ CellChangeTimes->{3.728562889510316*^9},
+ CellLabel->
+  "In[189]:=",ExpressionUUID->"28aa499f-d6a8-4c5a-bc19-905f7451d7cf"]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Computing Matrix Function", "Subsubsection",
+ CellChangeTimes->{{3.728561503855195*^9, 
+  3.728561511276552*^9}},ExpressionUUID->"f74e4b33-c5aa-4df5-83a4-\
+21aa25fb11b5"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"theMatrix", "[", 
+   RowBox[{
+   "pathNet_", ",", "pathStrength_", ",", "pathDomain_", ",", "preDomains_"}], 
+   RowBox[{"(*", 
+    RowBox[{"List", " ", "of", " ", "imported", " ", "domains"}], "*)"}], 
+   "]"}], ":=", "\[IndentingNewLine]", 
+  RowBox[{"Module", "[", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+     "imp", ",", "network", ",", "preStrengths", ",", "preDomIDs", ",", 
+      "doubledNetList", ",", "prePosDomInNet", ",", "domIDs", ",", 
+      "posDomInNet", ",", "domains", ",", "orderedNet", ",", 
+      "positionsToRemove", ",", "preFinalNet", ",", "finalNet1", ",", 
+      "posDomainsK", ",", "connectedDomains", ",", "preLinkMaps", ",", 
+      "finalNet", ",", "linkMaps", ",", "correlationLinkMaps", ",", 
+      "posDomainsWithLinks", ",", "domainsWithLinks", ",", "posNull", ",", 
+      "strengths", ",", "posJustLedDomains", ",", "ids", ",", 
+      "posIdsInDomIds", ",", "strengthsOfDomainsWithLinks", ",", 
+      "domainsPlusStrength", ",", "correlationLinkMapsWithLand", ",", 
+      "domainNamedByPosition", ",", "domainMap", ",", "domainMapPlusLand", 
+      ",", "noLandAndFlattenedDomains", ",", 
+      "noLandAndFlattenedCorrelationMap", ",", "matrixWithAllZeros", ",", 
+      "TheMatrix"}], "}"}], ",", "\[IndentingNewLine]", 
+    RowBox[{"(*", 
+     RowBox[{"Step", " ", "1"}], "*)"}], "\[IndentingNewLine]", 
+    RowBox[{"(*", 
+     RowBox[{"Importing", " ", "and", " ", "definitions"}], "*)"}], 
+    "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"imp", "=", 
+      RowBox[{"impStuffandDefining", "[", 
+       RowBox[{"pathNet", ",", "pathStrength", ",", "pathDomain"}], "]"}]}], 
+     ";", "\[IndentingNewLine]", 
+     RowBox[{"network", "=", 
+      RowBox[{"imp", "[", 
+       RowBox[{"[", "1", "]"}], "]"}]}], ";", 
+     RowBox[{"(*", 
+      RowBox[{
+      "The", " ", "network", " ", "has", " ", "it", " ", "is", " ", "given", 
+       " ", "me", " ", "from", " ", "the", " ", "Net", " ", "Inference"}], 
+      "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"preStrengths", "=", 
+      RowBox[{"imp", "[", 
+       RowBox[{"[", "2", "]"}], "]"}]}], ";", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{"All", " ", "strengths"}], ",", " ", 
+       RowBox[{"zeros", " ", "included"}]}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{"Ids", " ", "of", " ", "every", " ", "domain"}], ",", " ", 
+       RowBox[{
+        RowBox[{
+        "in", " ", "the", " ", "same", " ", "order", " ", "I", " ", 
+         "downloaded", " ", "them", "\[IndentingNewLine]", "I", " ", "call", 
+         " ", "it", " ", "preDomIDs", " ", "because", " ", "it", " ", "will", 
+         " ", "re"}], "-", 
+        RowBox[{
+        "defined", " ", "for", " ", "the", " ", "case", " ", "in", " ", 
+         "which", " ", "one", " ", "or", " ", "more", " ", "domain", " ", 
+         "does", " ", "not", " ", "have", " ", "any", " ", 
+         RowBox[{"connection", "."}]}]}]}], "\[IndentingNewLine]", "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"preDomIDs", "=", 
+      RowBox[{"imp", "[", 
+       RowBox[{"[", "3", "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"In", " ", "the", " ", "list", " ", "network"}], ",", " ", 
+       RowBox[{
+       "the", " ", "links", " ", "are", " ", "never", " ", "repeated", " ", 
+        RowBox[{"twice", ".", " ", "This"}], " ", "becomes", " ", "now", " ", 
+        "a", " ", 
+        RowBox[{"problem", ":", " ", 
+         RowBox[{
+         "if", " ", "we", " ", "have", " ", "a", " ", "range", " ", "that", 
+          " ", "include", " ", "zero"}]}]}], ",", " ", 
+       RowBox[{
+        RowBox[{
+        "we", " ", "want", " ", "to", " ", "register", " ", "the", " ", 
+         "link", " ", 
+         RowBox[{"twice", ".", " ", "This"}], " ", "because", " ", "what", 
+         " ", "we", " ", "want", " ", "to", " ", "do", " ", "is", " ", "to", 
+         " ", "be", " ", "able", " ", "to", " ", "end", " ", "up", " ", 
+         "with", " ", "a", " ", "new", " ", "network", " ", "list", " ", 
+         "where", " ", "in", " ", "every", " ", "sublist", " ", "\"\<i\>\"", 
+         " ", "we", " ", "have", " ", "all", " ", "the", " ", "connection", 
+         " ", "going", " ", "from", " ", 
+         RowBox[{"domain", "[", 
+          RowBox[{"[", "i", "]"}], "]"}]}], " ", "\[Rule]", " ", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"domain", "[", 
+           RowBox[{"[", "k", "]"}], "]"}], " ", "and", " ", "the", " ", 
+          "connections", " ", 
+          RowBox[{"domain", "[", 
+           RowBox[{"[", "i", "]"}], "]"}]}], " ", "<->", " ", 
+         RowBox[{"domain", "[", 
+          RowBox[{"[", "k", "]"}], "]"}]}]}]}], " ", "\[IndentingNewLine]", 
+      "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{"In", " ", "doubledNetList"}], ",", " ", 
+       RowBox[{"every", " ", "domain"}]}], " ", "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"doubledNetList", "=", "\[IndentingNewLine]", 
+      RowBox[{"Partition", "[", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"Flatten", "[", "\[IndentingNewLine]", 
+         RowBox[{"Table", "[", "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{"If", "[", "\[IndentingNewLine]", 
+            RowBox[{"(*", 
+             RowBox[{
+              RowBox[{
+              "If", " ", "the", " ", "product", " ", "of", " ", "the", " ", 
+               "two", " ", "lags", " ", "is", " ", "equal", " ", "to", " ", 
+               "zero", "\[IndentingNewLine]", "or", " ", "if", " ", "the", 
+               " ", "product", " ", "of", " ", "the", " ", "two", " ", "is", 
+               " ", "less", " ", "than", " ", "zero"}], " ", "\[Rule]", " ", 
+              RowBox[{
+              "the", " ", "lag", " ", "range", " ", "include", " ", 
+               "zero"}]}], "*)"}], "\[IndentingNewLine]", 
+            RowBox[{
+             RowBox[{
+              RowBox[{
+               RowBox[{
+                RowBox[{"network", "[", 
+                 RowBox[{"[", 
+                  RowBox[{"i", 
+                   RowBox[{"(*", 
+                    RowBox[{"sublist", " ", "i"}], "*)"}], ",", "3"}], 
+                  RowBox[{"(*", 
+                   RowBox[{"first", " ", "link"}], "*)"}], "]"}], "]"}], "*", 
+                
+                RowBox[{"network", "[", 
+                 RowBox[{"[", 
+                  RowBox[{"i", 
+                   RowBox[{"(*", 
+                    RowBox[{"sublist", " ", "i"}], "*)"}], ",", "4"}], 
+                  RowBox[{"(*", 
+                   RowBox[{"first", " ", "link"}], "*)"}], "]"}], "]"}]}], 
+               "\[Equal]", "0"}], "||", "\[IndentingNewLine]", 
+              RowBox[{
+               RowBox[{
+                RowBox[{"network", "[", 
+                 RowBox[{"[", 
+                  RowBox[{"i", 
+                   RowBox[{"(*", 
+                    RowBox[{"sublist", " ", "i"}], "*)"}], ",", "3"}], 
+                  RowBox[{"(*", 
+                   RowBox[{"first", " ", "link"}], "*)"}], "]"}], "]"}], "*", 
+                
+                RowBox[{"network", "[", 
+                 RowBox[{"[", 
+                  RowBox[{"i", 
+                   RowBox[{"(*", 
+                    RowBox[{"sublist", " ", "i"}], "*)"}], ",", "4"}], 
+                  RowBox[{"(*", 
+                   RowBox[{"first", " ", "link"}], "*)"}], "]"}], "]"}]}], 
+               "<", "0"}]}], ",", "\[IndentingNewLine]", 
+             RowBox[{"{", 
+              RowBox[{
+               RowBox[{"network", "[", 
+                RowBox[{"[", "i", 
+                 RowBox[{"(*", 
+                  RowBox[{"sublist", " ", "i"}], "*)"}], "]"}], "]"}], ",", 
+               RowBox[{"Flatten", "[", 
+                RowBox[{"{", 
+                 RowBox[{
+                  RowBox[{"network", "[", 
+                   RowBox[{"[", 
+                    RowBox[{"i", ",", "2"}], "]"}], "]"}], ",", 
+                  RowBox[{"network", "[", 
+                   RowBox[{"[", 
+                    RowBox[{"i", ",", "1"}], "]"}], "]"}], ",", 
+                  RowBox[{"network", "[", 
+                   RowBox[{"[", 
+                    RowBox[{"i", ",", 
+                    RowBox[{"3", ";;", "5"}]}], "]"}], "]"}]}], "}"}], 
+                "]"}]}], "}"}], 
+             RowBox[{"(*", 
+              RowBox[{
+              "If", " ", "true", " ", "double", " ", "the", " ", "list", " ", 
+               "but", " ", "with", " ", "reversed", " ", "order", " ", "of", 
+               " ", "the", " ", "domains", " ", "connected"}], "*)"}], ",", 
+             "\[IndentingNewLine]", 
+             RowBox[{"network", "[", 
+              RowBox[{"[", "i", 
+               RowBox[{"(*", 
+                RowBox[{"sublist", " ", "i"}], "*)"}], "]"}], "]"}]}], 
+            RowBox[{"(*", 
+             RowBox[{
+             "If", " ", "not", " ", "keep", " ", "giving", " ", "me", " ", 
+              "the", " ", "same", " ", "list"}], "*)"}], 
+            "\[IndentingNewLine]", "]"}], ",", 
+           RowBox[{"{", 
+            RowBox[{"i", ",", "1", ",", 
+             RowBox[{"Length", "[", "network", "]"}], ",", "1"}], "}"}]}], 
+          "]"}], "]"}], ",", 
+        RowBox[{"{", "5", "}"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{"I", " ", "look", " ", "at", " ", "where", " ", "every", " ", 
+       RowBox[{"preDomIDs", "[", 
+        RowBox[{"[", "i", "]"}], "]"}], " ", "is", " ", "stored", " ", "in", 
+       " ", "doubledNetList"}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"prePosDomInNet", "=", "\[IndentingNewLine]", 
+      RowBox[{"Table", "[", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"Position", "[", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"Transpose", "[", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"doubledNetList", "[", 
+              RowBox[{"[", 
+               RowBox[{"All", ",", "1"}], "]"}], "]"}], ",", 
+             RowBox[{"doubledNetList", "[", 
+              RowBox[{"[", 
+               RowBox[{"All", ",", "2"}], "]"}], "]"}]}], "}"}], "]"}], ",", 
+          "\[IndentingNewLine]", 
+          RowBox[{"preDomIDs", "[", 
+           RowBox[{"[", "i", "]"}], "]"}]}], "]"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "[", "preDomIDs", "]"}], ",", "1"}], "}"}]}], 
+       "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+      "I", " ", "remove", " ", "the", " ", "domain", " ", "with", " ", "no", 
+       " ", "link", " ", "from", " ", "the", " ", "list", " ", "of", " ", 
+       RowBox[{"domains", "'"}], " ", "IDs"}], "*)"}], "\[IndentingNewLine]", 
+     
+     RowBox[{"domIDs", "=", 
+      RowBox[{"Delete", "[", 
+       RowBox[{"preDomIDs", ",", 
+        RowBox[{"Position", "[", 
+         RowBox[{"prePosDomInNet", ",", 
+          RowBox[{"{", "}"}]}], "]"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+     
+     RowBox[{"(*", 
+      RowBox[{"I", " ", "remove", " ", "the", " ", 
+       RowBox[{"{", "}"}], " ", "from", " ", "the", " ", "position", " ", 
+       "of", " ", "the", " ", "net"}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"posDomInNet", "=", 
+      RowBox[{"Select", "[", 
+       RowBox[{"prePosDomInNet", ",", " ", 
+        RowBox[{
+         RowBox[{"UnsameQ", "[", 
+          RowBox[{"#", ",", 
+           RowBox[{"{", "}"}]}], "]"}], "&"}]}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+      "I", " ", "remove", " ", "the", " ", "domain", " ", "with", " ", "no", 
+       " ", "link", " ", "from", " ", "the", " ", "list", " ", "with", " ", 
+       "domains"}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"domains", "=", 
+      RowBox[{"Delete", "[", 
+       RowBox[{"preDomains", ",", 
+        RowBox[{"Position", "[", 
+         RowBox[{"prePosDomInNet", ",", 
+          RowBox[{"{", "}"}]}], "]"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+     
+     RowBox[{"(*", 
+      RowBox[{
+      "orderedNet", " ", "is", " ", "a", " ", "list", " ", "of", " ", 
+       "sublists", " ", "and", " ", "its", " ", "length", " ", "is", " ", 
+       "the", " ", "number", " ", "of", " ", "domains", " ", "that", " ", 
+       "have", " ", "links"}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{"These", " ", "are", " ", "link", " ", "maps"}], ",", " ", 
+       RowBox[{
+       "for", " ", "every", " ", "domain", " ", "i", " ", "I", " ", "have", 
+        " ", "all", " ", "its", " ", "links", " ", "in", " ", 
+        RowBox[{"orderedNet", "[", 
+         RowBox[{"[", "i", "]"}], "]"}]}]}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"orderedNet", "=", 
+      RowBox[{"Table", "[", 
+       RowBox[{
+        RowBox[{"Map", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"doubledNetList", "[", 
+            RowBox[{"[", "#", "]"}], "]"}], "&"}], ",", 
+          RowBox[{"posDomInNet", "[", 
+           RowBox[{"[", 
+            RowBox[{"i", ",", "All", ",", "1"}], "]"}], "]"}]}], "]"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "[", "posDomInNet", "]"}], ",", "1"}], "}"}]}], 
+       "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{"Now", "..."}], "in", " ", 
+         RowBox[{"orderedNet", "[", 
+          RowBox[{"[", "i", "]"}], "]"}], " ", "I", " ", "have", " ", "3", 
+         " ", "different", " ", "types", " ", "of", " ", 
+         RowBox[{"links", ":", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"(", "1", ")"}], " ", "i"}], " ", "\[UndirectedEdge]", 
+           " ", "k"}]}]}], ";", "\[IndentingNewLine]", "  ", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"(", "2", ")"}], " ", "i"}], " ", "\[Rule]", " ", "k"}], 
+        ";", "\[IndentingNewLine]", "  ", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"(", "3", ")"}], " ", "i"}], " ", "<", 
+         RowBox[{"-", " ", "k"}]}], " ", ";", "\[IndentingNewLine]", 
+        "\[IndentingNewLine]", 
+        RowBox[{
+        "Here", " ", "I", " ", "want", " ", "to", " ", "redefine", " ", "the",
+          " ", "same", " ", "list", " ", "orderedNet", " ", "BUT", " ", 
+         "without", " ", "the", " ", "case", " ", "number", " ", 
+         RowBox[{
+          RowBox[{"(", "3", ")"}], ".", "\[IndentingNewLine]", "How"}], " ", 
+         "do", " ", "I", " ", "do", " ", 
+         RowBox[{"it", "?", "\[IndentingNewLine]", "Luckily"}]}]}], ",", " ", 
+       
+       RowBox[{"if", " ", "domain", " ", "i", " ", "in", " ", 
+        RowBox[{"orderedNet", "[", 
+         RowBox[{"[", "i", "]"}], "]"}], " ", "is", " ", "leading", " ", "a", 
+        " ", "domain", " ", "k"}], ",", " ", 
+       RowBox[{
+        RowBox[{
+        "it", " ", "will", " ", "always", " ", "appear", " ", "as", " ", 
+         "first", " ", "in", " ", "\[IndentingNewLine]", "the", " ", 
+         "sublist", " ", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{
+           "domain1", ",", " ", "domain2", ",", " ", "lag1", ",", " ", "lag2",
+             ",", " ", "corr"}], "}"}], ".", "\[IndentingNewLine]", "I"}], 
+         " ", "do", " ", "then", " ", "the", " ", 
+         RowBox[{"following", ":", " ", 
+          RowBox[{"for", " ", "every", " ", "sublist", " ", "in", " ", 
+           RowBox[{"orderedNet", "[", 
+            RowBox[{"[", "i", "]"}], "]"}], " ", "I", " ", "look", " ", "at", 
+           " ", 
+           RowBox[{"{", 
+            RowBox[{"domain1", ",", " ", "domain2"}], "}"}], " ", "and", " ", 
+           
+           RowBox[{
+            RowBox[{"{", 
+             RowBox[{"lag1", ",", " ", "lag2"}], "}"}], ".", " ", 
+            "\[IndentingNewLine]", 
+            RowBox[{"-", " ", "STEP"}]}], " ", 
+           RowBox[{"(", "1", ")"}]}], ":", " ", 
+          RowBox[{
+           RowBox[{"If", " ", "the", " ", "domain2"}], " ", "\[Equal]", " ", 
+           RowBox[{"i", " ", "and", " ", "lag1", " ", "*", " ", "lag2"}], " ",
+            ">", " ", 
+           RowBox[{
+           "0", " ", "it", " ", "means", " ", "that", " ", "we", " ", "are", 
+            " ", "in", " ", "case", " ", 
+            RowBox[{"(", "3", ")"}]}]}], ":", "                    ", 
+          RowBox[{
+          "domain1", " ", "is", " ", "leading", " ", "domain", " ", "i"}]}]}],
+         ";", " ", 
+        RowBox[{
+         RowBox[{"I", " ", "remove", " ", "this", " ", 
+          RowBox[{"link", ".", "\[IndentingNewLine]", " ", 
+           RowBox[{"-", " ", "STEP"}]}], " ", 
+          RowBox[{"(", "2", ")"}]}], ":", " ", 
+         RowBox[{"All", " ", "the", " ", "other", " ", "links", " ", 
+          RowBox[{"(", "sublists", ")"}], " ", 
+          RowBox[{"orderedNet", "[", 
+           RowBox[{"[", "i", "]"}], "]"}], " ", "are", " ", "links", " ", "I",
+           " ", "actually", " ", "care", " ", 
+          RowBox[{"about", ".", " ", "However"}], " ", "there", " ", "is", 
+          " ", "a", " ", "problem", " ", "here"}]}]}], ",", " ", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{
+          "for", " ", "the", " ", "cases", " ", "such", " ", "as", " ", 
+           RowBox[{"(", "1", ")"}], " ", 
+           RowBox[{"(", 
+            RowBox[{"i", " ", "\[UndirectedEdge]", " ", "k"}], ")"}], " ", 
+           "I", " ", "have", " ", "two"}], "..."}], " ", "they", " ", "are", 
+         "\[IndentingNewLine]", " ", "defined", " ", "as", " ", 
+         RowBox[{"{", 
+          RowBox[{
+          "domain1", ",", " ", "domain2", ",", " ", "lag1", ",", " ", "lag2", 
+           ",", " ", "corr"}], "}"}], " ", "and", " ", 
+         RowBox[{"{", 
+          RowBox[{
+          "domain2", ",", " ", "domain1", ",", " ", "lag1", ",", " ", "lag2", 
+           ",", " ", "corr"}], "}"}], "\[IndentingNewLine]", "\t", "Given", 
+         " ", "domain1"}], " ", "=", " ", "i"}], ",", " ", 
+       RowBox[{"I", " ", "remove", " ", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+          "domain2", ",", " ", "domain1", ",", " ", "lag1", ",", " ", "lag2", 
+           ",", " ", "corr"}], "}"}], "."}]}]}], "\[IndentingNewLine]", 
+      "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{"Step", " ", 
+       RowBox[{"(", "1", ")"}]}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"(*", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{"orderedNet", "[", 
+          RowBox[{"[", "i", "]"}], "]"}], "[", 
+         RowBox[{"[", "j", "]"}], "]"}], "=", " ", 
+        RowBox[{"{", 
+         RowBox[{
+         "domain1", ",", " ", "domain2", ",", " ", "lag1", ",", " ", "lag2", 
+          ",", " ", "corr"}], "}"}]}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"orderedNet", "[", 
+          RowBox[{"[", "i", "]"}], "]"}], "[", 
+         RowBox[{"[", 
+          RowBox[{"j", ",", "1"}], "]"}], "]"}], "=", " ", 
+        RowBox[{
+         RowBox[{
+         "domain1", "\[IndentingNewLine]", "If", " ", "domain1", " ", "is", 
+          " ", "different", " ", "from", " ", 
+          RowBox[{"domIDs", "[", 
+           RowBox[{"[", "i", "]"}], "]"}], " ", "AND", " ", "lag1", "*", 
+          "lag2"}], " ", ">", " ", 
+         RowBox[{
+         "0", " ", "this", " ", "means", " ", "that", " ", "I", " ", "want", 
+          " ", "to", " ", "record", " ", "to", " ", "remove", " ", "this", 
+          " ", "from", " ", "the", " ", 
+          RowBox[{"list", ":", " ", 
+           RowBox[{
+           "to", " ", "do", " ", "so", " ", "I", " ", "record", " ", "its", 
+            " ", "position", " ", "and", "\[IndentingNewLine]", "I", " ", 
+            "later", " ", "remove", " ", 
+            RowBox[{"it", ".", "\[IndentingNewLine]", "If"}], " ", "the", " ",
+             "criterion", " ", "is", " ", "not", " ", "satisfied"}]}]}]}]}], 
+       ",", " ", 
+       RowBox[{
+       "it", " ", "will", " ", "give", " ", "me", " ", "a", " ", "Null", " ", 
+        "as", " ", "a", " ", 
+        RowBox[{"Position", ".", "\[IndentingNewLine]", "In"}], " ", "this", 
+        " ", "case", " ", "I", " ", "remove", " ", 
+        RowBox[{"it", "."}]}]}], "\[IndentingNewLine]", "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"positionsToRemove", "=", "\[IndentingNewLine]", 
+      RowBox[{"Table", "[", "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{"loop", " ", "to", " ", "all", " ", "domains", " ", "i"}], 
+        "*)"}], "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"i", ",", "\[IndentingNewLine]", 
+          RowBox[{"Select", "[", 
+           RowBox[{"(*", 
+            RowBox[{"Select", " ", "just", " ", "the", " ", "numbers"}], 
+            "*)"}], "\[IndentingNewLine]", 
+           RowBox[{"(*", "Flatten", "*)"}], "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{"Flatten", "[", "\[IndentingNewLine]", 
+             RowBox[{"Table", "[", "\[IndentingNewLine]", 
+              RowBox[{
+               RowBox[{"If", "[", 
+                RowBox[{"(*", "\[IndentingNewLine]", 
+                 RowBox[{
+                  RowBox[{
+                  "Condition", " ", "of", " ", "not", " ", "having", " ", 
+                   "domain1"}], " ", "=", " ", 
+                  RowBox[{
+                  "i", " ", "and", " ", "the", " ", "lag", " ", "product", 
+                   " ", "greater", " ", "than", " ", "0"}]}], "*)"}], 
+                "\[IndentingNewLine]", 
+                RowBox[{
+                 RowBox[{
+                  RowBox[{
+                   RowBox[{
+                    RowBox[{"orderedNet", "[", 
+                    RowBox[{"[", "i", "]"}], "]"}], "[", 
+                    RowBox[{"[", 
+                    RowBox[{"j", ",", "1"}], "]"}], "]"}], "\[NotEqual]", 
+                   RowBox[{"domIDs", "[", 
+                    RowBox[{"[", "i", "]"}], "]"}]}], "&&", 
+                  RowBox[{
+                   RowBox[{
+                    RowBox[{
+                    RowBox[{"orderedNet", "[", 
+                    RowBox[{"[", "i", "]"}], "]"}], "[", 
+                    RowBox[{"[", 
+                    RowBox[{"j", ",", "3"}], "]"}], "]"}], "*", 
+                    RowBox[{
+                    RowBox[{"orderedNet", "[", 
+                    RowBox[{"[", "i", "]"}], "]"}], "[", 
+                    RowBox[{"[", 
+                    RowBox[{"j", ",", "4"}], "]"}], "]"}]}], ">", "0"}]}], 
+                 ",", "\[IndentingNewLine]", 
+                 RowBox[{"(*", 
+                  RowBox[{
+                  "Give", " ", "me", " ", "the", " ", "position", " ", "so", 
+                   " ", "that", " ", "I", " ", "can", " ", "remove", " ", 
+                   "it", " ", "later"}], "*)"}], "\[IndentingNewLine]", 
+                 RowBox[{"Position", "[", 
+                  RowBox[{
+                   RowBox[{"orderedNet", "[", 
+                    RowBox[{"[", "i", "]"}], "]"}], ",", 
+                   RowBox[{
+                    RowBox[{"orderedNet", "[", 
+                    RowBox[{"[", "i", "]"}], "]"}], "[", 
+                    RowBox[{"[", "j", "]"}], "]"}]}], "]"}]}], 
+                "\[IndentingNewLine]", "]"}], ",", 
+               RowBox[{"{", 
+                RowBox[{"j", ",", "1", ",", 
+                 RowBox[{"Length", "[", 
+                  RowBox[{"orderedNet", "[", 
+                   RowBox[{"[", "i", "]"}], "]"}], "]"}], ",", "1"}], "}"}]}],
+               "]"}], "]"}], ",", 
+            RowBox[{
+             RowBox[{"NumberQ", "[", "#", "]"}], "&"}]}], "]"}]}], "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "[", "orderedNet", "]"}], ",", "1"}], "}"}]}], 
+       "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{"Let", "'"}], "s", " ", "remove", " ", "these", " ", 
+       "positions", " ", "from", " ", "orderedNet"}], "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"preFinalNet", "=", "\[IndentingNewLine]", 
+      RowBox[{"Table", "[", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"Delete", "[", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"orderedNet", "[", 
+           RowBox[{"[", "\[IndentingNewLine]", 
+            RowBox[{"positionsToRemove", "[", 
+             RowBox[{"[", 
+              RowBox[{"i", ",", "1"}], "]"}], "]"}], 
+            RowBox[{"(*", 
+             RowBox[{
+             "look", " ", "at", " ", "orderedNet", " ", "in", " ", "position",
+               " ", 
+              RowBox[{"positionsToRemove", "[", 
+               RowBox[{"[", 
+                RowBox[{"i", ",", "1"}], "]"}], "]"}]}], "*)"}], 
+            "\[IndentingNewLine]", "]"}], "]"}], ",", "\[IndentingNewLine]", 
+          RowBox[{"Map", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"{", "#", "}"}], "&"}], ",", 
+            RowBox[{"positionsToRemove", "[", 
+             RowBox[{"[", 
+              RowBox[{"i", ",", "2"}], "]"}], "]"}]}], "]"}]}], 
+         RowBox[{"(*", 
+          RowBox[{"remove", " ", "the", " ", "sublists", " ", 
+           RowBox[{"positionsToRemove", "[", 
+            RowBox[{"[", 
+             RowBox[{"1", ",", "2"}], "]"}], "]"}]}], "*)"}], 
+         "\[IndentingNewLine]", "]"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "[", "positionsToRemove", "]"}], ",", "1"}], 
+         "}"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{"Step", " ", 
+       RowBox[{"(", "2", ")"}]}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"(*", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"I", " ", "have", " ", "double", " ", 
+        RowBox[{"links", ".", " ", "I"}], " ", "do", " ", "the", " ", 
+        RowBox[{"following", ":", " ", 
+         RowBox[{
+          RowBox[{"for", " ", "each", " ", "sublist", " ", "in", " ", 
+           RowBox[{"preFinalNet", "[", 
+            RowBox[{"[", "i", "]"}], "]"}], " ", 
+           RowBox[{"{", 
+            RowBox[{
+            "domain1", ",", "domain2", ",", "lag1", ",", "lag2", ",", 
+             "corr"}], "}"}], " ", "I", " ", "look", "\[IndentingNewLine]", 
+           "at", " ", 
+           RowBox[{"domain1", ".", " ", "If"}], " ", "domain1"}], " ", 
+          "\[NotEqual]", " ", 
+          RowBox[{"domIDs", "[", 
+           RowBox[{"[", "i", "]"}], "]"}]}]}]}], ",", " ", 
+       RowBox[{
+       "I", " ", "switch", " ", "position", " ", "between", " ", "domain2", 
+        " ", "and", " ", 
+        RowBox[{"domain1", ".", "\[IndentingNewLine]", "Then"}], " ", "I", 
+        " ", "delete", " ", "all", " ", 
+        RowBox[{"duplicates", "."}]}]}], "\[IndentingNewLine]", "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"finalNet1", "=", "\[IndentingNewLine]", 
+      RowBox[{"Select", "[", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"Table", "[", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"DeleteDuplicates", "[", "\[IndentingNewLine]", 
+           RowBox[{"Table", "[", "\[IndentingNewLine]", 
+            RowBox[{
+             RowBox[{"If", "[", "\[IndentingNewLine]", 
+              RowBox[{
+               RowBox[{
+                RowBox[{"preFinalNet", "[", 
+                 RowBox[{"[", 
+                  RowBox[{"i", ",", "j", 
+                   RowBox[{"(*", 
+                    RowBox[{"sublist", " ", "j", " ", "in", " ", 
+                    RowBox[{"preFinalNet", "[", 
+                    RowBox[{"[", "i", "]"}], "]"}]}], "*)"}], ",", "1"}], 
+                  RowBox[{"(*", "domain1", "*)"}], "]"}], "]"}], 
+                "\[NotEqual]", 
+                RowBox[{"domIDs", "[", 
+                 RowBox[{"[", "i", "]"}], "]"}]}], ",", "\[IndentingNewLine]", 
+               RowBox[{"(*", 
+                RowBox[{
+                "If", " ", "it", " ", "is", " ", "true", " ", "change", " ", 
+                 "the", " ", "order", " ", 
+                 RowBox[{"domains", "'"}], " ", "order"}], "*)"}], 
+               "\[IndentingNewLine]", 
+               RowBox[{"{", "\[IndentingNewLine]", 
+                RowBox[{
+                 RowBox[{"preFinalNet", "[", 
+                  RowBox[{"[", 
+                   RowBox[{"i", ",", "j", 
+                    RowBox[{"(*", 
+                    RowBox[{"sublist", " ", "j", " ", "in", " ", 
+                    RowBox[{"preFinalNet", "[", 
+                    RowBox[{"[", "i", "]"}], "]"}]}], "*)"}], ",", "2"}], 
+                   "]"}], "]"}], ",", "\[IndentingNewLine]", 
+                 RowBox[{"preFinalNet", "[", 
+                  RowBox[{"[", 
+                   RowBox[{"i", ",", "j", 
+                    RowBox[{"(*", 
+                    RowBox[{"sublist", " ", "j", " ", "in", " ", 
+                    RowBox[{"preFinalNet", "[", 
+                    RowBox[{"[", "i", "]"}], "]"}]}], "*)"}], ",", "1"}], 
+                   "]"}], "]"}], ",", "\[IndentingNewLine]", 
+                 RowBox[{"preFinalNet", "[", 
+                  RowBox[{"[", 
+                   RowBox[{"i", ",", "j", 
+                    RowBox[{"(*", 
+                    RowBox[{"sublist", " ", "j", " ", "in", " ", 
+                    RowBox[{"preFinalNet", "[", 
+                    RowBox[{"[", "i", "]"}], "]"}]}], "*)"}], ",", "3"}], 
+                   "]"}], "]"}], ",", "\[IndentingNewLine]", 
+                 RowBox[{"preFinalNet", "[", 
+                  RowBox[{"[", 
+                   RowBox[{"i", ",", "j", 
+                    RowBox[{"(*", 
+                    RowBox[{"sublist", " ", "j", " ", "in", " ", 
+                    RowBox[{"preFinalNet", "[", 
+                    RowBox[{"[", "i", "]"}], "]"}]}], "*)"}], ",", "4"}], 
+                   "]"}], "]"}], ",", "\[IndentingNewLine]", 
+                 RowBox[{"preFinalNet", "[", 
+                  RowBox[{"[", 
+                   RowBox[{"i", ",", "j", 
+                    RowBox[{"(*", 
+                    RowBox[{"sublist", " ", "j", " ", "in", " ", 
+                    RowBox[{"preFinalNet", "[", 
+                    RowBox[{"[", "i", "]"}], "]"}]}], "*)"}], ",", "5"}], 
+                   "]"}], "]"}]}], "\[IndentingNewLine]", "}"}], ",", 
+               "\[IndentingNewLine]", 
+               RowBox[{"(*", 
+                RowBox[{
+                "If", " ", "it", " ", "is", " ", "NOT", " ", "true", " ", 
+                 "do", " ", "not", " ", "change", " ", "anything"}], "*)"}], 
+               "\[IndentingNewLine]", 
+               RowBox[{"preFinalNet", "[", 
+                RowBox[{"[", 
+                 RowBox[{"i", 
+                  RowBox[{"(*", "i", "*)"}], ",", "j"}], 
+                 RowBox[{"(*", 
+                  RowBox[{"sublist", " ", "j"}], "*)"}], "]"}], "]"}]}], 
+              "\[IndentingNewLine]", "]"}], ",", 
+             RowBox[{"{", 
+              RowBox[{"j", ",", "1", ",", 
+               RowBox[{"Length", "[", 
+                RowBox[{"preFinalNet", "[", 
+                 RowBox[{"[", "i", 
+                  RowBox[{"(*", "i", "*)"}], "]"}], "]"}], "]"}], ",", "1"}], 
+              "}"}]}], "]"}], "\[IndentingNewLine]", "]"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"i", ",", "1", ",", 
+            RowBox[{"Length", "[", "preFinalNet", "]"}], ",", "1"}], "}"}]}], 
+         "]"}], ",", 
+        RowBox[{
+         RowBox[{"UnsameQ", "[", 
+          RowBox[{"#", ",", 
+           RowBox[{"{", "}"}]}], "]"}], "&"}]}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"(*", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+       "Now", " ", "I", " ", "want", " ", "to", " ", "do", " ", "the", " ", 
+        RowBox[{"following", ":", " ", 
+         RowBox[{
+         "I", " ", "consider", " ", "the", " ", "domain", " ", "id", " ", 
+          RowBox[{"domID", "[", 
+           RowBox[{"[", "i", "]"}], "]"}]}]}]}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+       "I", " ", "look", " ", "at", " ", "its", " ", "respective", " ", 
+        "domain", " ", "in", " ", 
+        RowBox[{"domain", "[", 
+         RowBox[{"[", "i", "]"}], "]"}], " ", "in", " ", 
+        RowBox[{"finalNet1", ".", " ", "\[IndentingNewLine]", "I"}], " ", 
+        "then", " ", "look", " ", "at", " ", "the", " ", "domains", " ", 
+        "domainKs", " ", 
+        RowBox[{"(", 
+         RowBox[{"one", " ", "or", " ", "more"}], ")"}], " ", "and", " ", 
+        "\[IndentingNewLine]", 
+        RowBox[{"(", "1", ")"}], " ", "substitute", " ", "the", " ", "value", 
+        " ", "of", " ", "correlation", " ", "to", " ", "the", " ", "1", "s", 
+        " ", "that", " ", "define", " ", "it", "\[IndentingNewLine]", 
+        RowBox[{"(", "2", ")"}], " ", "put", " ", "all", " ", "these", " ", 
+        "domains", " ", "in", " ", "one", " ", "single", " ", "map"}], ",", 
+       " ", 
+       RowBox[{
+       "where", " ", "if", " ", "two", " ", "of", " ", "them", " ", "overlap",
+         " ", "I", " ", "put", " ", "the", " ", "value", " ", "of", " ", 
+        "the", " ", "one", " ", "with", " ", "the", " ", "strongest", " ", 
+        RowBox[{"correlation", ".", "\[IndentingNewLine]", "Everything"}], 
+        " ", "should", " ", "be", " ", "returned", " ", "as", " ", 
+        RowBox[{"follow", ":", "\[IndentingNewLine]", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"domain", "[", 
+            RowBox[{"[", "i", "]"}], "]"}], ",", " ", 
+           RowBox[{"correlationLinkMap", " ", "of", " ", 
+            RowBox[{"domain", "[", 
+             RowBox[{"[", "i", "]"}], "]"}]}]}], "}"}]}]}]}], 
+      "\[IndentingNewLine]", "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"(*", "\[IndentingNewLine]", 
+      RowBox[{
+      "I", " ", "then", " ", "want", " ", "to", " ", "assign", " ", "to", " ",
+        "every", " ", "domain", " ", "its", " ", "respective", " ", "link", 
+       " ", "to", " ", 
+       RowBox[{"domain", "[", 
+        RowBox[{"[", "i", "]"}], "]"}], "\[IndentingNewLine]", "Step", " ", 
+       RowBox[{"(", "i", ")"}], "\[IndentingNewLine]", "I", " ", "have", " ", 
+       "to", " ", "find", " ", "the", " ", "position", " ", "in", " ", 
+       "domains", " ", "of", " ", "all", " ", "domains", " ", "that", " ", 
+       "are", " ", "linked", " ", "to", " ", 
+       RowBox[{"domain", "[", 
+        RowBox[{"[", "i", "]"}], "]"}], " ", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{
+         "which", " ", "are", " ", "in", " ", "the", " ", "second", " ", 
+          "position", " ", "of", " ", "every", " ", "sublist"}], ")"}], ".", 
+        "\[IndentingNewLine]", "I"}], " ", "call", " ", "it", " ", 
+       "posDomainsK"}], "\[IndentingNewLine]", "*)"}], "\[IndentingNewLine]", 
+     
+     RowBox[{"posDomainsK", "=", "\[IndentingNewLine]", 
+      RowBox[{"Table", "[", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"Flatten", "[", "\[IndentingNewLine]", 
+         RowBox[{"Table", "[", "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{"Position", "[", "\[IndentingNewLine]", 
+            RowBox[{"domIDs", ",", "\[IndentingNewLine]", 
+             RowBox[{"finalNet1", "[", 
+              RowBox[{"[", 
+               RowBox[{"i", 
+                RowBox[{"(*", 
+                 RowBox[{"sublist", " ", "i"}], "*)"}], ",", "j", 
+                RowBox[{"(*", 
+                 RowBox[{
+                 "sublist", " ", "j", " ", "inside", " ", "sublist", " ", 
+                  "i"}], "*)"}], ",", "2"}], 
+               RowBox[{"(*", 
+                RowBox[{"2", "nd", " ", "domain"}], "*)"}], "]"}], "]"}]}], 
+            "\[IndentingNewLine]", "]"}], ",", 
+           RowBox[{"{", 
+            RowBox[{"j", ",", "1", ",", 
+             RowBox[{"Length", "[", 
+              RowBox[{"finalNet1", "[", 
+               RowBox[{"[", "i", "]"}], "]"}], "]"}], ",", "1"}], "}"}]}], 
+          "]"}], "]"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "[", "finalNet1", "]"}], ",", "1"}], "}"}]}], 
+       "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+      "I", " ", "then", " ", "consider", " ", "all", " ", "domains", " ", 
+       "relative", " ", "to", " ", "posDomainsK"}], "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+      "Every", " ", "domain", " ", "is", " ", "defined", " ", "by", " ", "1", 
+       "s", " ", "in", " ", "a", " ", "\"\<sea\>\"", " ", "of", " ", 
+       "zeros"}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"connectedDomains", "=", "\[IndentingNewLine]", 
+      RowBox[{"Table", "[", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"Map", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"domains", "[", 
+            RowBox[{"[", "#", "]"}], "]"}], "&"}], ",", 
+          RowBox[{"posDomainsK", "[", 
+           RowBox[{"[", "i", "]"}], "]"}]}], "]"}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "[", "posDomainsK", "]"}]}], "}"}]}], "]"}]}], 
+     ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+      "To", " ", "every", " ", "connectedDomains", " ", "domain", " ", "I", 
+       " ", "change", " ", "these", " ", "1", " ", "values", " ", "to", " ", 
+       "the", " ", "correspondent", " ", "correlations", " ", "of", " ", 
+       "the", " ", "domains", " ", "they", " ", "are", " ", "connected", " ", 
+       "to"}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"preLinkMaps", "=", "\[IndentingNewLine]", 
+      RowBox[{"Table", "[", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"Table", "[", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"connectedDomains", "[", 
+            RowBox[{"[", 
+             RowBox[{"i", 
+              RowBox[{"(*", 
+               RowBox[{"sublist", " ", "i"}], "*)"}], ",", "j"}], 
+             RowBox[{"(*", 
+              RowBox[{
+              "jth", " ", "domain", " ", "in", " ", "sublist", " ", "i"}], 
+              "*)"}], "]"}], "]"}], "*", 
+           RowBox[{"finalNet1", "[", 
+            RowBox[{"[", 
+             RowBox[{"i", 
+              RowBox[{"(*", 
+               RowBox[{"sublist", " ", "i"}], "*)"}], ",", "j", 
+              RowBox[{"(*", 
+               RowBox[{
+               "jth", " ", "domain", " ", "in", " ", "sublist", " ", "i"}], 
+               "*)"}], ",", "5"}], 
+             RowBox[{"(*", "correlation", "*)"}], "]"}], "]"}]}], ",", 
+          RowBox[{"{", 
+           RowBox[{"j", ",", "1", ",", 
+            RowBox[{"Length", "[", 
+             RowBox[{"connectedDomains", "[", 
+              RowBox[{"[", "i", "]"}], "]"}], "]"}]}], "}"}]}], "]"}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "[", "connectedDomains", "]"}]}], "}"}]}], 
+       "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{"Now", " ", "we", " ", "remove", " ", "the", " ", 
+       RowBox[{"{", "}"}], " ", "entries", " ", "from", " ", "the", " ", 
+       "finalNet1"}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"finalNet", "=", 
+      RowBox[{"Select", "[", 
+       RowBox[{"finalNet1", ",", 
+        RowBox[{
+         RowBox[{"UnsameQ", "[", 
+          RowBox[{"#", ",", 
+           RowBox[{"{", "}"}]}], "]"}], "&"}]}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{"Now", " ", "we", " ", "remove", " ", "the", " ", 
+       RowBox[{"{", "}"}], " ", "entries", " ", "from", " ", "the", " ", 
+       "link", " ", "maps"}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"linkMaps", "=", 
+      RowBox[{"Select", "[", 
+       RowBox[{"preLinkMaps", ",", 
+        RowBox[{
+         RowBox[{"UnsameQ", "[", 
+          RowBox[{"#", ",", 
+           RowBox[{"{", "}"}]}], "]"}], "&"}]}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{"Correlation", " ", "link", " ", "Maps", " ", "hold", " ", 
+       RowBox[{"Length", "[", "finalNet", "]"}], " ", 
+       RowBox[{"maps", ".", " ", "Every"}], " ", "maps", " ", "at", " ", 
+       "position", " ", "i", " ", "gives", " ", "the", " ", "link", " ", 
+       "maps", " ", 
+       RowBox[{"(", 
+        RowBox[{
+        "using", " ", "correlation", " ", "and", " ", "not", " ", "weights"}],
+         ")"}], " ", "of", " ", 
+       RowBox[{"finalNet", "[", 
+        RowBox[{"[", 
+         RowBox[{"i", ",", "1", ",", "1"}], "]"}], "]"}]}], "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"correlationLinkMaps", "=", "\[IndentingNewLine]", 
+      RowBox[{"Table", "[", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"Table", "[", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"Table", "[", "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{"choosingTheStrongest", "[", "\[IndentingNewLine]", 
+             RowBox[{"linkMaps", "[", 
+              RowBox[{"[", "\[IndentingNewLine]", 
+               RowBox[{"s", 
+                RowBox[{"(*", 
+                 RowBox[{
+                 "correlation", " ", "maps", " ", "in", " ", "sublist", " ", 
+                  "s"}], "*)"}], ",", "\[IndentingNewLine]", "All", " ", 
+                RowBox[{"(*", 
+                 RowBox[{
+                 "all", " ", "correlation", " ", "maps", " ", "in", " ", 
+                  "sublist", " ", "i"}], "*)"}], ",", "\[IndentingNewLine]", 
+                "lat", 
+                RowBox[{"(*", 
+                 RowBox[{
+                 "kth", " ", "grid", " ", "point", " ", "on", " ", "the", " ",
+                   "Y", " ", "axis", " ", 
+                  RowBox[{"(", "latitude", ")"}]}], "*)"}], ",", 
+                "\[IndentingNewLine]", "lon"}], 
+               RowBox[{"(*", 
+                RowBox[{
+                "kth", " ", "grid", " ", "point", " ", "on", " ", "the", " ", 
+                 "X", " ", "axis", " ", 
+                 RowBox[{"(", "longitude", ")"}]}], "*)"}], "]"}], "]"}], 
+             "\[IndentingNewLine]", "]"}], ",", "\[IndentingNewLine]", 
+            RowBox[{"{", 
+             RowBox[{"lon", ",", "1", ",", "dimX", ",", "1"}], "}"}]}], "]"}],
+           ",", "\[IndentingNewLine]", 
+          RowBox[{"{", 
+           RowBox[{"lat", ",", "1", ",", "dimY", ",", "1"}], "}"}]}], "]"}], 
+        ",", "\[IndentingNewLine]", 
+        RowBox[{"{", 
+         RowBox[{"s", ",", "1", ",", 
+          RowBox[{"Length", "[", "linkMaps", "]"}], ",", "1"}], "}"}]}], 
+       "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{
+       "I", " ", "define", " ", "a", " ", "new", " ", "list", " ", "where", 
+        " ", "I", " ", "store", " ", "the", " ", "domains", " ", "that", " ", 
+        "have", " ", "connections"}], ",", " ", 
+       RowBox[{
+       "following", " ", "the", " ", "order", " ", "of", " ", "finalNet"}]}], 
+      "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+      "I", " ", "look", " ", "at", " ", "the", " ", "ID", " ", "in", " ", 
+       "each", " ", "sublist", " ", "in", " ", "finalNet", " ", "and", " ", 
+       "their", " ", "position", " ", "in", " ", "domID"}], "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"posDomainsWithLinks", "=", "\[IndentingNewLine]", 
+      RowBox[{"Flatten", "[", 
+       RowBox[{"Table", "[", 
+        RowBox[{
+         RowBox[{"Position", "[", 
+          RowBox[{"domIDs", ",", 
+           RowBox[{"finalNet", "[", 
+            RowBox[{"[", 
+             RowBox[{"i", ",", "1", ",", "1"}], "]"}], "]"}]}], "]"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"i", ",", "1", ",", 
+           RowBox[{"Length", "[", "finalNet", "]"}], ",", "1"}], "}"}]}], 
+        "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+      "I", " ", "then", " ", "consider", " ", "the", " ", "maps", " ", "in", 
+       " ", "that", " ", "position"}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"domainsWithLinks", "=", 
+      RowBox[{"Table", "[", 
+       RowBox[{
+        RowBox[{"domains", "[", 
+         RowBox[{"[", 
+          RowBox[{"posDomainsWithLinks", "[", 
+           RowBox[{"[", "i", "]"}], "]"}], "]"}], "]"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "[", "posDomainsWithLinks", "]"}], ",", "1"}], 
+         "}"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+      "One", " ", "or", " ", "more", " ", "domains", " ", "with", " ", "a", 
+       " ", "strength", " ", "may", " ", "have", " ", "it", " ", "just", " ", 
+       "because", " ", "some", " ", "other", " ", "domain", " ", "is", " ", 
+       "leading", " ", 
+       RowBox[{"them", ":", " ", 
+        RowBox[{"I", " ", "have", " ", "to", " ", "remove", " ", "these", " ", 
+         RowBox[{"bastards", "."}]}]}]}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+      "To", " ", "remove", " ", "them", " ", "I", " ", "have", " ", "to", " ",
+        "know", " ", "their", " ", "position"}], "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{
+       "I", " ", "can", " ", "just", " ", "consider", " ", "finalNet1"}], ",",
+        " ", 
+       RowBox[{"find", " ", "out", " ", "where", " ", "the", " ", 
+        RowBox[{"{", "}"}], " ", "are", " ", "and", " ", "remove", " ", 
+        "them"}]}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"posNull", "=", 
+      RowBox[{"Position", "[", 
+       RowBox[{"finalNet1", ",", 
+        RowBox[{"{", "}"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+      "Also", " ", "I", " ", "remove", " ", "the", " ", "zero", " ", "value", 
+       " ", 
+       RowBox[{"(", 
+        RowBox[{
+        "everything", " ", "should", " ", "be", " ", "OK", " ", "with", " ", 
+         "the", " ", 
+         RowBox[{"order", "!"}]}], ")"}]}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"strengths", "=", 
+      RowBox[{"Select", "[", 
+       RowBox[{
+        RowBox[{"Delete", "[", 
+         RowBox[{"preStrengths", ",", "posNull"}], "]"}], ",", 
+        RowBox[{
+         RowBox[{"#", ">", "0"}], "&"}]}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"(*", "\[IndentingNewLine]", 
+      RowBox[{"Ok", ",", 
+       RowBox[{
+       "every", " ", "sublist", " ", "have", " ", "two", " ", "domains"}], 
+       ",", 
+       RowBox[{
+        RowBox[{
+        "the", " ", "lag", " ", "associated", " ", "with", " ", "their", " ", 
+         
+         RowBox[{"links", ".", " ", "Only"}], " ", "the", " ", "connections", 
+         " ", "of", " ", "type"}], "\[Rule]", 
+        RowBox[{"or", "\[UndirectedEdge]", 
+         RowBox[{"are", " ", 
+          RowBox[{"kept", ".", "This"}], " ", "gives", " ", "us", " ", 
+          "problems", " ", "in", " ", "the", " ", "case", " ", "in", " ", 
+          "which", " ", "one", " ", "node", " ", "i", " ", "was", " ", "just",
+           " ", "led", " ", "by", " ", "a", " ", "node", " ", 
+          RowBox[{"j", ":", 
+           RowBox[{"i", "<", 
+            RowBox[{
+             RowBox[{"-", 
+              RowBox[{"j", ".", "This"}]}], " ", "sublist", " ", "will", " ", 
+             "not", " ", "be", " ", 
+             RowBox[{"there", ".", "So"}], " ", "the", " ", "finalNet1", " ", 
+             "and", " ", "later", " ", "finalNet", " ", "will", " ", "have", 
+             " ", "a", " ", "Length", " ", "that", " ", "is", " ", "SMALLER", 
+             " ", "than", " ", "the", " ", "Length", " ", "of", " ", "the", 
+             " ", "list", " ", "of", " ", "strength", " ", "and", " ", "the", 
+             " ", "list", " ", "of", " ", "connected", " ", 
+             "domains"}]}]}]}]}]}]}], "\n", "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{"Step", " ", 
+       RowBox[{"(", "1", ")"}]}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+      "I", " ", "look", " ", "at", " ", "the", " ", "positions", " ", "where",
+        " ", "I", " ", "have", " ", "a", " ", 
+       RowBox[{"{", "}"}], " ", "in", " ", "preFinalNet"}], "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"posJustLedDomains", "=", 
+      RowBox[{"Flatten", "[", 
+       RowBox[{"Position", "[", 
+        RowBox[{"preFinalNet", ",", 
+         RowBox[{"{", "}"}]}], "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"I", " ", "look", " ", "at", " ", "these", " ", 
+         RowBox[{"positions", ".", " ", "In"}], " ", "the", " ", "ordered", 
+         " ", 
+         RowBox[{"network", ".", " ", "These"}], " ", "bastards", " ", "are", 
+         " ", "just", " ", "led"}], "..."}], "they", " ", "have", " ", "to", 
+       " ", "appear", " ", "on", " ", "the", " ", "second", " ", "argument", 
+       " ", "of", " ", "the", " ", 
+       RowBox[{"sublist", "."}]}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{"ids", " ", "give", " ", "me", " ", "their", " ", "id"}], 
+      "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+        "I", " ", "do", " ", "all", " ", "this", " ", "process", " ", "if", 
+         " ", 
+         RowBox[{"Length", "[", "posJustLedDomains", "]"}]}], ">", 
+        RowBox[{"0.", " ", "If", " ", "it", " ", "is", " ", 
+         RowBox[{"Length", "[", "posJustLedDomains", "]"}]}]}], "=", 
+       RowBox[{
+       "0", " ", "it", " ", "just", " ", "means", " ", "that", " ", "I", " ", 
+        "do", " ", "not", " ", "have", " ", "any", " ", "problems", 
+        "\[IndentingNewLine]", "so", " ", "that", " ", 
+        "strengthsOfDomainsWithLinks", " ", "is", " ", "the", " ", "one", " ",
+         "computed", " ", "using", " ", "the", " ", "strength"}]}], 
+      "\[IndentingNewLine]", "*)"}], "\[IndentingNewLine]", 
+     "\[IndentingNewLine]", "\[IndentingNewLine]", 
+     RowBox[{"If", "[", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"Length", "[", "posJustLedDomains", "]"}], "\[Equal]", "0"}], 
+       ",", "\[IndentingNewLine]", 
+       RowBox[{"strengthsOfDomainsWithLinks", "=", "strengths"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"ids", "=", "\[IndentingNewLine]", 
+        RowBox[{"If", "[", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"Length", "[", "posJustLedDomains", "]"}], "\[Equal]", 
+           "1"}], ",", 
+          RowBox[{"(*", 
+           RowBox[{"Only", " ", "one", " ", "position"}], "*)"}], 
+          "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{"orderedNet", "[", 
+            RowBox[{"[", 
+             RowBox[{"posJustLedDomains", "[", 
+              RowBox[{"[", "1", "]"}], "]"}], "]"}], "]"}], "[", 
+           RowBox[{"[", 
+            RowBox[{"1", ",", "2"}], "]"}], "]"}], 
+          RowBox[{"(*", 
+           RowBox[{"This", " ", "is", " ", "the", " ", "id"}], "*)"}], ",", 
+          "\[IndentingNewLine]", 
+          RowBox[{"(*", 
+           RowBox[{
+           "If", " ", "more", " ", "than", " ", "one", " ", "position"}], 
+           "*)"}], "\[IndentingNewLine]", 
+          RowBox[{"Table", "[", "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"orderedNet", "[", 
+              RowBox[{"[", 
+               RowBox[{"posJustLedDomains", "[", 
+                RowBox[{"[", "i", "]"}], "]"}], "]"}], "]"}], "[", 
+             RowBox[{"[", 
+              RowBox[{"1", ",", "2"}], "]"}], "]"}], ",", 
+            RowBox[{"{", 
+             RowBox[{"i", ",", "1", ",", 
+              RowBox[{"Length", "[", "posJustLedDomains", "]"}]}], "}"}]}], 
+           "]"}]}], "]"}]}]}], "\[IndentingNewLine]", "]"}], ";", 
+     "\[IndentingNewLine]", "\[IndentingNewLine]", 
+     RowBox[{"If", "[", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"Length", "[", "ids", "]"}], "\[Equal]", "0"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+        "Now", " ", "I", " ", "look", " ", "at", " ", "position", " ", "of", 
+         " ", "these", " ", "ids", " ", "in", " ", "the", " ", "domIDs"}], 
+        "*)"}], "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"posIdsInDomIds", "=", 
+         RowBox[{"Flatten", "[", 
+          RowBox[{"Table", "[", 
+           RowBox[{
+            RowBox[{"Position", "[", 
+             RowBox[{"domIDs", ",", "ids"}], "]"}], ",", "1"}], "]"}], 
+          "]"}]}], ";", "\[IndentingNewLine]", 
+        RowBox[{"strengthsOfDomainsWithLinks", "=", 
+         RowBox[{"Delete", "[", 
+          RowBox[{"strengths", ",", "posIdsInDomIds"}], "]"}]}]}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+        "Now", " ", "I", " ", "look", " ", "at", " ", "position", " ", "of", 
+         " ", "these", " ", "ids", " ", "in", " ", "the", " ", "domIDs"}], 
+        "*)"}], "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"posIdsInDomIds", "=", 
+         RowBox[{"Flatten", "[", 
+          RowBox[{
+           RowBox[{"Table", "[", 
+            RowBox[{
+             RowBox[{"Position", "[", 
+              RowBox[{"domIDs", ",", 
+               RowBox[{"ids", "[", 
+                RowBox[{"[", "i", "]"}], "]"}]}], "]"}], ",", 
+             RowBox[{"{", 
+              RowBox[{"i", ",", "1", ",", 
+               RowBox[{"Length", "[", "ids", "]"}], ",", "1"}], "}"}]}], 
+            "]"}], ",", "1"}], "]"}]}], ";", "\[IndentingNewLine]", 
+        RowBox[{"(*", 
+         RowBox[{
+          RowBox[{
+          "I", " ", "want", " ", "to", " ", "remove", " ", "these", " ", 
+           "positions", " ", "from", " ", "the", " ", "strength", " ", 
+           RowBox[{"list", ".", "\[IndentingNewLine]", "By"}], " ", "doing", 
+           " ", "so", " ", "I", " ", "define", " ", "a", " ", "list", " ", 
+           "of", " ", "strength", " ", "just", " ", "for", " ", "domains", 
+           " ", "with", " ", "links"}], " ", "\[Rule]", " ", 
+          RowBox[{"or", " ", "\[UndirectedEdge]"}]}], " ", "*)"}], 
+        "\[IndentingNewLine]", 
+        RowBox[{"strengthsOfDomainsWithLinks", "=", 
+         RowBox[{"Delete", "[", 
+          RowBox[{"strengths", ",", "posIdsInDomIds"}], "]"}]}]}]}], 
+      "\[IndentingNewLine]", "]"}], ";", "\[IndentingNewLine]", 
+     "\[IndentingNewLine]", "\[IndentingNewLine]", "\[IndentingNewLine]", 
+     RowBox[{"domainsPlusStrength", "=", "\[IndentingNewLine]", 
+      RowBox[{"Table", "[", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"domainsWithLinks", "[", 
+          RowBox[{"[", "k", "]"}], "]"}], "*", 
+         RowBox[{"strengthsOfDomainsWithLinks", "[", 
+          RowBox[{"[", "k", "]"}], "]"}]}], ",", 
+        RowBox[{"{", 
+         RowBox[{"k", ",", "1", ",", 
+          RowBox[{"Length", "[", "strengthsOfDomainsWithLinks", "]"}], ",", 
+          "1"}], "}"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{
+       "linkCorrMapsANDdomains", " ", "all", " ", "sublists", " ", "of", " ", 
+        "three", " ", "arguments", " ", "where", " ", "the", " ", "first", 
+        " ", "argument", " ", "is", " ", "the", " ", "domain", " ", "we", " ",
+         "are", " ", "considering", " ", "defined", " ", "as", " ", "its", 
+        " ", "strength", " ", "in", " ", "a", " ", "\"\<sea\>\"", " ", "of", 
+        " ", "zeros", " ", "and", " ", "the", " ", "third", " ", "is", " ", 
+        "the", " ", "link", " ", "map", " ", "associated", " ", "with", " ", 
+        RowBox[{"it", ".", " ", "Where"}], " ", "this", " ", "link", " ", 
+        "map", " ", "does", " ", "not", " ", "care", " ", "about", " ", "who",
+         " ", "is", " ", "leading", " ", "it", " ", "but", " ", "just", " ", 
+        "of", " ", "who", " ", "is", " ", "leading", " ", "and", " ", "to", 
+        " ", "whom", " ", "it", " ", "is", " ", "connected", " ", "in", " ", 
+        "a", " ", "bi"}], "-", 
+       RowBox[{"direct", " ", "way"}]}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+      "To", " ", "every", " ", "map", " ", "I", " ", "now", " ", "added", " ",
+        "the", " ", "land"}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"correlationLinkMapsWithLand", "=", 
+      RowBox[{"Evaluate", "[", 
+       RowBox[{"correlationLinkMaps", "+", 
+        RowBox[{"Table", "[", 
+         RowBox[{"land", ",", 
+          RowBox[{"{", 
+           RowBox[{"i", ",", "1", ",", 
+            RowBox[{"Length", "[", "correlationLinkMaps", "]"}], ",", "1"}], 
+           "}"}]}], "]"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+       "domainsWithLinks", " ", "store", " ", "all", " ", "the", " ", 
+        "domains", " ", "with", " ", "links", " ", "with", " ", "the", " ", 
+        "RIGHT", " ", 
+        RowBox[{"order", ".", " ", "Every"}], " ", "domain", " ", "is", " ", 
+        "defined", " ", "as", " ", "a", " ", "bunch", " ", "of", " ", "1", 
+        "s", " ", "in", " ", "\"\<sea\>\"", " ", "of", " ", 
+        RowBox[{"zeros", ".", "\[IndentingNewLine]", "I"}], " ", "now", " ", 
+        "do", " ", "the", " ", 
+        RowBox[{"following", ":", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"(", "1", ")"}], " ", "instead", " ", "of", " ", "having", 
+          " ", "1", "s", " ", "to", " ", "define", " ", "them"}]}]}], ",", 
+       " ", 
+       RowBox[{
+       "I", " ", "put", " ", "the", " ", "position", " ", "that", " ", "they",
+         " ", "have", " ", "in", " ", "the", " ", "list", " ", 
+        "domainsWithLinks"}], ",", "\[IndentingNewLine]", "  ", 
+       RowBox[{
+        RowBox[{"(", "2", ")"}], " ", "I", " ", "put", " ", "everything", " ",
+         "in", " ", "1", " ", "single", " ", 
+        RowBox[{"map", ".", " ", "When"}], " ", "there", " ", "is", " ", 
+        "overlapping", " ", "I", " ", "choose", " ", "to", " ", "put", " ", 
+        "the", " ", "domain", " ", "with", " ", "the", " ", "strongest", " ", 
+        
+        RowBox[{"strength", ".", " ", "The"}], " ", "strengthMap", " ", "of", 
+        " ", "the", " ", "connected", " ", "domains", " ", "is", " ", 
+        "stored", " ", "in", " ", "domainsPlusStrength"}]}], 
+      "\[IndentingNewLine]", "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{"Step", " ", 
+       RowBox[{"(", "1", ")"}]}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"domainNamedByPosition", "=", "\[IndentingNewLine]", 
+      RowBox[{"Table", "[", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"Round", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"domainsWithLinks", "[", 
+            RowBox[{"[", "i", "]"}], "]"}], "*", "i"}], ",", "1"}], "]"}], 
+        RowBox[{"(*", 
+         RowBox[{
+         "Have", " ", "to", " ", "round", " ", "up", " ", "to", " ", "have", 
+          " ", "an", " ", "index"}], "*)"}], ",", "\[IndentingNewLine]", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "[", "domainsWithLinks", "]"}], ",", "1"}], 
+         "}"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"domainMap", "=", "\[IndentingNewLine]", 
+      RowBox[{"Table", "[", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"Table", "[", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"Which", "[", "\[IndentingNewLine]", 
+           RowBox[{"(*", 
+            RowBox[{
+             RowBox[{
+             "Consider", " ", "the", " ", "domainNamedByPosition", " ", "at", 
+              " ", "position", " ", 
+              RowBox[{"(", 
+               RowBox[{"i", ",", "j"}], ")"}]}], ",", " ", 
+             RowBox[{
+             "is", " ", "the", " ", "same", " ", "of", " ", "the", " ", 
+              "number", " ", "of", " ", "domains", " ", "with", " ", 
+              RowBox[{"links", "?", "\[IndentingNewLine]", "If"}], " ", 
+              "yes"}], ",", " ", 
+             RowBox[{
+             "it", " ", "means", " ", "that", " ", "there", " ", "everything",
+               " ", "is", " ", "zero"}]}], "*)"}], "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"Count", "[", 
+              RowBox[{
+               RowBox[{"domainNamedByPosition", "[", 
+                RowBox[{"[", 
+                 RowBox[{"All", ",", "lat", ",", "lon"}], "]"}], "]"}], ",", 
+               "0"}], "]"}], "\[Equal]", 
+             RowBox[{"Length", "[", "domainNamedByPosition", "]"}]}], ",", 
+            "\[IndentingNewLine]", "0.", 
+            RowBox[{"(*", 
+             RowBox[{
+             "Put", " ", "then", " ", "a", " ", "zero", " ", "if", " ", 
+              "this", " ", "is", " ", "true"}], "*)"}], ",", 
+            "\[IndentingNewLine]", 
+            RowBox[{"(*", 
+             RowBox[{
+             "Is", " ", "the", " ", "number", " ", "of", " ", "zero", " ", 
+              "element", " ", "less", " ", "than", " ", "the", " ", "number", 
+              " ", "of", " ", "domains", " ", "with", " ", 
+              RowBox[{"links", "?"}]}], "*)"}], "\[IndentingNewLine]", 
+            RowBox[{"(*", 
+             RowBox[{
+             "If", " ", "this", " ", "is", " ", "the", " ", "case", " ", "it",
+               " ", "means", " ", "that", " ", "this", " ", "grid", " ", 
+              "point", " ", "belongs", " ", "to", " ", "a", " ", 
+              RowBox[{"domain", "."}]}], "*)"}], "\[IndentingNewLine]", 
+            RowBox[{
+             RowBox[{"Count", "[", 
+              RowBox[{
+               RowBox[{"domainNamedByPosition", "[", 
+                RowBox[{"[", 
+                 RowBox[{"All", ",", "lat", ",", "lon"}], "]"}], "]"}], ",", 
+               "0"}], "]"}], "\[Equal]", 
+             RowBox[{"(", 
+              RowBox[{
+               RowBox[{"Length", "[", "domainNamedByPosition", "]"}], "-", 
+               "1"}], ")"}]}], 
+            RowBox[{"(*", 
+             RowBox[{"No", " ", "overlap"}], "*)"}], ",", 
+            "\[IndentingNewLine]", 
+            RowBox[{
+             RowBox[{"Select", "[", 
+              RowBox[{
+               RowBox[{"domainNamedByPosition", "[", 
+                RowBox[{"[", 
+                 RowBox[{"All", ",", "lat", ",", "lon"}], "]"}], "]"}], ",", 
+               RowBox[{
+                RowBox[{"#", "\[NotEqual]", "0"}], "&"}]}], "]"}], "[", 
+             RowBox[{"[", "1", "]"}], "]"}], 
+            RowBox[{"(*", 
+             RowBox[{
+              RowBox[{"Give", " ", "me", " ", "the", " ", "non"}], "-", 
+              RowBox[{"zero", " ", "value"}]}], "*)"}], ",", 
+            "\[IndentingNewLine]", 
+            RowBox[{
+             RowBox[{"Count", "[", 
+              RowBox[{
+               RowBox[{"domainNamedByPosition", "[", 
+                RowBox[{"[", 
+                 RowBox[{"All", ",", "lat", ",", "lon"}], "]"}], "]"}], ",", 
+               "0"}], "]"}], "<", 
+             RowBox[{"(", 
+              RowBox[{
+               RowBox[{"Length", "[", "domainNamedByPosition", "]"}], "-", 
+               "1"}], ")"}]}], " ", 
+            RowBox[{"(*", "Overlapping", "*)"}], ",", "\[IndentingNewLine]", 
+            RowBox[{"(*", "\[IndentingNewLine]", 
+             RowBox[{
+              RowBox[{"If", " ", "this", " ", "is", " ", "the", " ", "case"}],
+               ",", " ", 
+              RowBox[{
+              "look", " ", "at", " ", "the", " ", "same", " ", "position", 
+               " ", "the", " ", "maps", " ", "with", " ", "stored", " ", 
+               "the", " ", "domains", " ", "and", " ", "their", " ", 
+               "strength"}], ",", "\[IndentingNewLine]", 
+              RowBox[{
+              "tell", " ", "me", " ", "the", " ", "position", " ", "and", " ",
+                "define", " ", "the", " ", "value", " ", "of", " ", "the", 
+               " ", "domain", " ", "in", " ", "that", " ", "position"}]}], 
+             "\[IndentingNewLine]", "*)"}], "\[IndentingNewLine]", 
+            RowBox[{
+             RowBox[{"domainNamedByPosition", "[", 
+              RowBox[{"[", 
+               RowBox[{"All", ",", "lat", ",", "lon"}], "]"}], "]"}], 
+             "\[IndentingNewLine]", "[", 
+             RowBox[{"[", "\[IndentingNewLine]", 
+              RowBox[{"posStrongest", "[", "\[IndentingNewLine]", 
+               RowBox[{"domainsPlusStrength", "[", 
+                RowBox[{"[", 
+                 RowBox[{"All", ",", "lat", ",", "lon"}], "]"}], "]"}], 
+               "\[IndentingNewLine]", "]"}], "\[IndentingNewLine]", "]"}], 
+             "]"}]}], 
+           RowBox[{"(*", 
+            RowBox[{
+            "the", " ", "strongest", " ", "domain", " ", "in", " ", "that", 
+             " ", "position"}], "*)"}], "\[IndentingNewLine]", "]"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"lon", ",", "1", ",", "dimX", ",", "1"}], "}"}]}], "]"}], 
+        ",", "\[IndentingNewLine]", 
+        RowBox[{"{", 
+         RowBox[{"lat", ",", "1", ",", "dimY", ",", "1"}], "}"}]}], "]"}]}], 
+     ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{"I", " ", "add", " ", "the", " ", "mask"}], "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"domainMapPlusLand", "=", 
+      RowBox[{"Evaluate", "[", 
+       RowBox[{"domainMap", "+", "land"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{"Now", ",", " ", 
+       RowBox[{"consider", " ", "a", " ", "point", " ", "of", " ", 
+        RowBox[{"domainMapPlusLand", ":", "\[IndentingNewLine]", 
+         RowBox[{"Flatten", " ", "the", " ", "matrix"}]}]}], ",", " ", 
+       RowBox[{"remove", " ", "all", " ", "Indeterminate", " ", 
+        RowBox[{"(", 
+         RowBox[{"and", " ", "so", " ", "masked", " ", "values"}], ")"}]}], 
+       ",", " ", 
+       RowBox[{
+       "do", " ", "the", " ", "same", " ", "for", " ", "all", " ", 
+        "correlationLinkMaps", " ", "\[IndentingNewLine]", "is", " ", "there",
+         " ", "a", " ", "number", " ", "define", " ", 
+        RowBox[{"there", "?", "\[IndentingNewLine]", 
+         RowBox[{"-", " ", "If"}]}], " ", "no", " ", "give", " ", "me", " ", 
+        "a", " ", "list", " ", "of", " ", "zeros", " ", "long", 
+        "\[IndentingNewLine]", "   ", 
+        RowBox[{"Length", "[", 
+         RowBox[{"Select", "[", 
+          RowBox[{
+           RowBox[{"Flatten", "[", "domainMapPlusLand", "]"}], ",", 
+           RowBox[{
+            RowBox[{"NumberQ", "[", "#", "]"}], "&"}]}], "]"}], "]"}], " ", 
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{"all", " ", "the", " ", "non"}], "-", 
+          RowBox[{"masked", " ", "points"}]}], ")"}]}], ",", " ", 
+       "\[IndentingNewLine]", "\t", 
+       RowBox[{
+        RowBox[{"-", " ", "If"}], " ", "yes"}], ",", " ", 
+       RowBox[{"consider", " ", "the", " ", 
+        RowBox[{"correlationLinkMaps", "[", 
+         RowBox[{"[", 
+          RowBox[{"that", " ", "number"}], "]"}], "]"}], " ", "and", " ", 
+        "give", " ", "me", " ", "that", " ", "list"}]}], 
+      "\[IndentingNewLine]", "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"noLandAndFlattenedDomains", "=", 
+      RowBox[{"Select", "[", 
+       RowBox[{
+        RowBox[{"Flatten", "[", "domainMapPlusLand", "]"}], ",", 
+        RowBox[{
+         RowBox[{"NumberQ", "[", "#", "]"}], "&"}]}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"noLandAndFlattenedCorrelationMap", "=", "\[IndentingNewLine]", 
+      RowBox[{"Table", "[", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"Select", "[", 
+         RowBox[{
+          RowBox[{"Flatten", "[", 
+           RowBox[{"correlationLinkMapsWithLand", "[", 
+            RowBox[{"[", "i", "]"}], "]"}], "]"}], ",", 
+          RowBox[{
+           RowBox[{"NumberQ", "[", "#", "]"}], "&"}]}], "]"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "[", "correlationLinkMapsWithLand", "]"}], ",", 
+          "1"}], "}"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"matrixWithAllZeros", "=", 
+      RowBox[{"Table", "[", 
+       RowBox[{"0.", ",", 
+        RowBox[{"{", 
+         RowBox[{"i", ",", "1", ",", 
+          RowBox[{"Length", "[", "noLandAndFlattenedDomains", "]"}], ",", 
+          "1"}], "}"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"TheMatrix", "=", "\[IndentingNewLine]", 
+      RowBox[{"Round", "[", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"Table", "[", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"If", "[", "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"noLandAndFlattenedDomains", "[", 
+              RowBox[{"[", "k", "]"}], "]"}], "\[Equal]", "0."}], ",", 
+            "\[IndentingNewLine]", "matrixWithAllZeros", ",", 
+            "\[IndentingNewLine]", 
+            RowBox[{"Flatten", "[", "\[IndentingNewLine]", 
+             RowBox[{"noLandAndFlattenedCorrelationMap", "[", 
+              RowBox[{"[", "\[IndentingNewLine]", 
+               RowBox[{"noLandAndFlattenedDomains", "[", 
+                RowBox[{"[", "k", "]"}], "]"}], "\[IndentingNewLine]", "]"}], 
+              "]"}], "]"}]}], "\[IndentingNewLine]", "]"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"k", ",", "1", ",", 
+            RowBox[{"Length", "[", "noLandAndFlattenedDomains", "]"}], ",", 
+            "1"}], "}"}]}], "]"}], ",", "\[IndentingNewLine]", "0.01"}], 
+       "]"}]}], ";", "\[IndentingNewLine]", "TheMatrix"}]}], 
+   "\[IndentingNewLine]", "]"}]}]], "Input",
+ CellChangeTimes->{{3.728561547838417*^9, 3.728561551505108*^9}, {
+   3.728561624876892*^9, 3.72856171575738*^9}, {3.728561823789942*^9, 
+   3.728561885719853*^9}, {3.728561976047234*^9, 3.7285620236712723`*^9}, {
+   3.728562082377328*^9, 3.728562108974944*^9}, {3.7285621443473167`*^9, 
+   3.728562331236627*^9}, {3.7285623719673223`*^9, 3.7285623724270353`*^9}, {
+   3.7285624060016317`*^9, 3.7285626810763597`*^9}, {3.728562722498074*^9, 
+   3.728563050939151*^9}, {3.728756718444643*^9, 3.7287567506345263`*^9}, {
+   3.7287580868535433`*^9, 3.728758101495358*^9}, {3.7287623549765463`*^9, 
+   3.728762467174272*^9}, {3.728762602150717*^9, 3.728762619056024*^9}, {
+   3.728764879079365*^9, 3.728764885718038*^9}, {3.7287658821518917`*^9, 
+   3.72876589409081*^9}, {3.728766537849361*^9, 3.728766584006116*^9}, 
+   3.728766864413046*^9, {3.728838425174479*^9, 3.72883845235464*^9}, {
+   3.728840185649564*^9, 3.728840201034436*^9}},
+ CellLabel->
+  "In[191]:=",ExpressionUUID->"2ff1933a-acd4-4d84-8d7d-42596f28ede4"]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["netCorr(COBEv2,HadISST)", "Subsubsection",
+ CellChangeTimes->{{3.728563086098824*^9, 
+  3.728563103051597*^9}},ExpressionUUID->"ed02e66a-ad3d-4ee2-864e-\
+e52461c69071"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"matrixCOBEv2", "=", 
+   RowBox[{"theMatrix", "[", 
+    RowBox[{
+    "pathNetworkCOBE", ",", "pathStrengthsCOBE", ",", "pathDomainCOBE", ",", 
+     "preDomainsCOBE"}], "]"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.728563151088271*^9, 3.7285631577445583`*^9}, {
+  3.728563201788434*^9, 3.728563243755127*^9}},
+ CellLabel->
+  "In[192]:=",ExpressionUUID->"7b109fa4-3efe-4570-b172-d23ad8405775"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"matrixHadISST", "=", 
+   RowBox[{"theMatrix", "[", 
+    RowBox[{
+    "pathNetworkHadISST", ",", "pathStrengthsHadISST", ",", 
+     "pathDomainHadISST", ",", "preDomainsHadISST"}], "]"}]}], ";"}]], "Input",\
+
+ CellChangeTimes->{{3.728563640402416*^9, 3.72856366070778*^9}},
+ CellLabel->
+  "In[193]:=",ExpressionUUID->"49d17d79-2106-43bd-8c7c-7f589d2adffc"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Correlation", "[", 
+  RowBox[{
+   RowBox[{"Flatten", "[", "matrixCOBEv2", "]"}], ",", 
+   RowBox[{"Flatten", "[", "matrixHadISST", "]"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.728564913848166*^9, 3.72856492392881*^9}},
+ CellLabel->
+  "In[194]:=",ExpressionUUID->"b6f468f2-cc9d-496f-97f4-a1fd1ad94776"],
+
+Cell[BoxData["0.5453934477794803`"], "Output",
+ CellChangeTimes->{3.728564983898376*^9, 3.728566752067473*^9, 
+  3.76399917103712*^9},
+ CellLabel->
+  "Out[194]=",ExpressionUUID->"e8ae0ab6-88d8-4624-a8da-d618ee47dc8c"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1440, 793},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+PrintingCopies->1,
+PrintingPageRange->{1, Automatic},
+Magnification:>1.25 Inherited,
+FrontEndVersion->"11.3 for Mac OS X x86 (32-bit, 64-bit Kernel) (March 5, \
+2018)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 202, 4, 37, "Input",ExpressionUUID->"8a35848a-77d6-4996-bd0d-ec477ad71b31"],
+Cell[763, 26, 319, 9, 131, "Text",ExpressionUUID->"7d7d51e0-4844-4130-b4de-37966333e29e"],
+Cell[CellGroupData[{
+Cell[1107, 39, 174, 3, 56, "Subsubsection",ExpressionUUID->"e5c9b2fe-725e-45da-96d7-4293e1e578bd"],
+Cell[1284, 44, 615, 14, 246, "Text",ExpressionUUID->"13fc228e-affd-47c9-898e-dba3c9303592"],
+Cell[1902, 60, 1891, 53, 220, "Input",ExpressionUUID->"46ef9274-c61c-4336-b1ff-695f3a9a5ad3"],
+Cell[3796, 115, 4409, 112, 532, "Input",ExpressionUUID->"a3982140-f113-4ee7-b79e-36ce53f80c30"],
+Cell[8208, 229, 2947, 69, 402, "Input",ExpressionUUID->"f627969a-90c4-4026-8b15-8024d5d646df"],
+Cell[11158, 300, 3307, 77, 506, "Input",ExpressionUUID->"28973678-4d43-43f1-8f79-ee3f57e6f67e"],
+Cell[14468, 379, 542, 14, 64, "Input",ExpressionUUID->"b0be1dac-3b3d-4427-82cf-4ed88d10da50"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[15047, 398, 217, 4, 67, "Subsection",ExpressionUUID->"f8ac7078-978f-479f-b95d-f9ce6250e525"],
+Cell[CellGroupData[{
+Cell[15289, 406, 222, 4, 56, "Subsubsection",ExpressionUUID->"c6f5c329-9e71-4d04-8f71-21e4cf344539"],
+Cell[15514, 412, 3753, 83, 584, "Input",ExpressionUUID->"3630b409-31ba-456c-9888-b09129e62e97"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[19304, 500, 174, 3, 45, "Subsubsection",ExpressionUUID->"894049ca-2dbe-4eca-b3f1-80e195af0307"],
+Cell[19481, 505, 3495, 82, 662, "Input",ExpressionUUID->"28aa499f-d6a8-4c5a-bc19-905f7451d7cf"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[23013, 592, 176, 3, 45, "Subsubsection",ExpressionUUID->"f74e4b33-c5aa-4df5-83a4-21aa25fb11b5"],
+Cell[23192, 597, 70088, 1519, 8280, "Input",ExpressionUUID->"2ff1933a-acd4-4d84-8d7d-42596f28ede4"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[93317, 2121, 174, 3, 45, "Subsubsection",ExpressionUUID->"ed02e66a-ad3d-4ee2-864e-e52461c69071"],
+Cell[93494, 2126, 427, 10, 37, "Input",ExpressionUUID->"7b109fa4-3efe-4570-b172-d23ad8405775"],
+Cell[93924, 2138, 390, 10, 37, "Input",ExpressionUUID->"49d17d79-2106-43bd-8c7c-7f589d2adffc"],
+Cell[CellGroupData[{
+Cell[94339, 2152, 328, 7, 37, "Input",ExpressionUUID->"b6f468f2-cc9d-496f-97f4-a1fd1ad94776"],
+Cell[94670, 2161, 217, 4, 42, "Output",ExpressionUUID->"e8ae0ab6-88d8-4624-a8da-d618ee47dc8c"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+

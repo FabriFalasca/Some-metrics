@@ -1,0 +1,413 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 11.1' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     16018,        405]
+NotebookOptionsPosition[     14664,        373]
+NotebookOutlinePosition[     15102,        392]
+CellTagsIndexPosition[     15059,        389]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{"ClearAll", "[", "\"\<Global`*\>\"", "]"}]], "Input",
+ CellChangeTimes->{{3.727131010636983*^9, 3.727131019259403*^9}},
+ CellLabel->
+  "In[162]:=",ExpressionUUID->"8a35848a-77d6-4996-bd0d-ec477ad71b31"],
+
+Cell["\<\
+Similarity metric 
+
+In this folder you will find the strength maps of the COBEv2 and HadISST \
+datasets and the file land.txt.
+The file land.txt contains, well, the land...specifically values in the land \
+are set to Indeterminate and values in the ocean to 0.
+We need the land file for the following reason: we want to focus only on \
+points in the ocean. 
+Also there could be small differences between the land in HadISST and COBEv2 \
+so we apply in both the land found in COBEv2.
+
+In the folder you will also find a pdf with the printed code. 
+
+author: Fabri Falasca
+email: fabrifalasca@gmail.com\
+\>", "Text",
+ CellChangeTimes->{{3.727141507376342*^9, 3.7271419966503067`*^9}, {
+  3.763995861514635*^9, 3.76399586489508*^9}, {3.7639963405980253`*^9, 
+  3.7639966616186857`*^9}, {3.763997628536374*^9, 
+  3.763997700619184*^9}},ExpressionUUID->"160e70ad-4a6c-455b-a6e9-\
+b7b54d0ad998"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{"Paths", " ", "to", " ", "strength", " ", "maps"}], "*)"}], 
+  "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"pathStrengthMap1", "=", 
+     RowBox[{"StringJoin", "[", 
+      RowBox[{
+       RowBox[{"NotebookDirectory", "[", "]"}], ",", 
+       "\"\<strengthMap_COBEv2.txt\>\""}], "]"}]}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"pathStrengthMap2", "=", 
+     RowBox[{"StringJoin", "[", 
+      RowBox[{
+       RowBox[{"NotebookDirectory", "[", "]"}], ",", 
+       "\"\<strengthMap_HadISST.txt\>\""}], "]"}]}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", 
+    RowBox[{"path", " ", "to", " ", "land"}], "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"pathLand", "=", 
+     RowBox[{"StringJoin", "[", 
+      RowBox[{
+       RowBox[{"NotebookDirectory", "[", "]"}], ",", "\"\<land.txt\>\""}], 
+      "]"}]}], ";"}]}]}]], "Input",
+ CellChangeTimes->{{3.727131119198469*^9, 3.727131150334241*^9}, {
+   3.727131461139855*^9, 3.727131473722234*^9}, {3.727134035399807*^9, 
+   3.72713407563612*^9}, 3.763995874099842*^9, {3.763995919216123*^9, 
+   3.763995978280962*^9}, {3.76399752554467*^9, 3.763997528019575*^9}},
+ CellLabel->
+  "In[163]:=",ExpressionUUID->"a1a21689-ac0d-479c-a333-4b82ff349854"],
+
+Cell[CellGroupData[{
+
+Cell["function", "Subsubsection",
+ CellChangeTimes->{{3.727132766643777*^9, 3.72713276779812*^9}, 
+   3.7639959099332027`*^9},ExpressionUUID->"991c2b72-49c7-4432-893b-\
+571c23ec6cb4"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+   "Function", " ", "to", " ", "download", " ", "the", " ", "2", " ", 
+    "strength", " ", "maps"}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{"importing", "[", 
+    RowBox[{"path1_", ",", "path2_", ",", "pathLand_"}], "]"}], ":=", 
+   "\[IndentingNewLine]", 
+   RowBox[{"Module", "[", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+      "sMap1", ",", "sMap2", ",", "dim", ",", "result", ",", "timeSeries", 
+       ",", "land", ",", "sMapLand1", ",", "sMapLand2"}], "}"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"sMap1", "=", 
+       RowBox[{"Import", "[", 
+        RowBox[{"path1", ",", "\"\<Data\>\""}], "]"}]}], ";", 
+      RowBox[{"(*", 
+       RowBox[{
+       "Importing", " ", "the", " ", "first", " ", "Strength", " ", "Map"}], 
+       "*)"}], "\[IndentingNewLine]", 
+      RowBox[{"sMap2", "=", 
+       RowBox[{"Import", "[", 
+        RowBox[{"path2", ",", "\"\<Data\>\""}], "]"}]}], ";", 
+      RowBox[{"(*", 
+       RowBox[{
+       "Importing", " ", "the", " ", "second", " ", "Strength", " ", "Map"}], 
+       "*)"}], "\[IndentingNewLine]", 
+      RowBox[{"(*", 
+       RowBox[{"Dimensions", "?"}], "*)"}], "\[IndentingNewLine]", 
+      RowBox[{"dim", "=", 
+       RowBox[{"Dimensions", "[", "sMap1", "]"}]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"(*", 
+       RowBox[{
+       "Importing", " ", "a", " ", "matlab", " ", "file", " ", "with", " ", 
+        "the", " ", "lands", " ", "stored", " ", "in", " ", "it"}], "*)"}], 
+      "\[IndentingNewLine]", 
+      RowBox[{"land", "=", "\[IndentingNewLine]", 
+       RowBox[{"Partition", "[", "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{"ToExpression", "[", "\[IndentingNewLine]", 
+          RowBox[{"Import", "[", 
+           RowBox[{"pathLand", ",", "\"\<Words\>\""}], "]"}], "]"}], ",", 
+         "\[IndentingNewLine]", 
+         RowBox[{"{", 
+          RowBox[{"dim", "[", 
+           RowBox[{"[", "2", "]"}], "]"}], "}"}]}], "]"}]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"sMapLand1", "=", 
+       RowBox[{"Evaluate", "[", 
+        RowBox[{"sMap1", "+", "land"}], "]"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"sMapLand2", "=", 
+       RowBox[{"Evaluate", "[", 
+        RowBox[{"sMap2", "+", "land"}], "]"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"result", "=", 
+       RowBox[{"{", 
+        RowBox[{"sMapLand1", ",", "sMapLand2"}], "}"}]}], ";", 
+      RowBox[{"(*", 
+       RowBox[{
+       "Result", " ", "as", " ", "a", " ", "list", " ", "with", " ", "the", 
+        " ", "2", " ", "strength", " ", "maps"}], "*)"}], 
+      "\[IndentingNewLine]", "result"}]}], "\[IndentingNewLine]", 
+    "]"}]}]}]], "Input",
+ CellChangeTimes->{{3.7271323818919497`*^9, 3.7271325115344267`*^9}, {
+  3.72713262523913*^9, 3.727132640520773*^9}, {3.727133645880498*^9, 
+  3.727133653742353*^9}, {3.727133685710843*^9, 3.7271338433116283`*^9}, {
+  3.763997412068202*^9, 3.763997452898559*^9}, {3.763997539764583*^9, 
+  3.763997541765296*^9}, {3.763997611670082*^9, 3.763997614199892*^9}},
+ CellLabel->
+  "In[166]:=",ExpressionUUID->"db424e7c-c35a-4c53-a6d2-60a0ab4a9d75"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+   "Function", " ", "to", " ", "compute", " ", "the", " ", "Distance", " ", 
+    "between", " ", "the", " ", "two", " ", "strength", " ", "maps"}], "*)"}],
+   "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{"distance", "[", 
+    RowBox[{"x_List", ",", "y_List"}], "]"}], ":=", "\[IndentingNewLine]", 
+   RowBox[{"Module", "[", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+      "preFlattenX", ",", "preFlattenY", ",", "flattenX", ",", "flattenY", 
+       ",", "num", ",", "den", ",", "notNormalizedResult", ",", "norm", ",", 
+       "distance"}], "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"preFlattenX", "=", 
+       RowBox[{"Flatten", "[", "x", "]"}]}], ";", 
+      RowBox[{"(*", 
+       RowBox[{
+       "From", " ", "a", " ", "matrix", " ", "to", " ", "a", " ", "vector"}], 
+       "*)"}], "\[IndentingNewLine]", 
+      RowBox[{"preFlattenY", "=", 
+       RowBox[{"Flatten", "[", "y", "]"}]}], ";", 
+      RowBox[{"(*", 
+       RowBox[{
+       "From", " ", "a", " ", "matrix", " ", "to", " ", "a", " ", "vector"}], 
+       "*)"}], "\[IndentingNewLine]", 
+      RowBox[{"(*", 
+       RowBox[{
+       "So", " ", "instead", " ", "of", " ", "working", " ", "with", " ", "a",
+         " ", "matrix", " ", "of", " ", "dimensions", " ", 
+        RowBox[{"(", 
+         RowBox[{"m", ",", "n"}], ")"}], " ", "I", " ", "work", " ", "with", 
+        " ", "\[IndentingNewLine]", "a", " ", "vector", " ", "of", " ", 
+        "length", " ", 
+        RowBox[{"mxn", ".", " ", "I"}], " ", "then", " ", "remove", " ", 
+        "the", " ", "Indeterminate", " ", 
+        RowBox[{"(", 
+         RowBox[{"coming", " ", "from", " ", "the", " ", "mask"}], ")"}], 
+        "\[IndentingNewLine]", " ", "values", " ", "and", " ", "work", " ", 
+        "with", " ", "the", " ", "remaining", " ", "part", " ", "of", " ", 
+        "the", " ", 
+        RowBox[{"vector", "."}]}], "*)"}], "\[IndentingNewLine]", 
+      RowBox[{"flattenX", "=", 
+       RowBox[{"Select", "[", 
+        RowBox[{"preFlattenX", ",", 
+         RowBox[{
+          RowBox[{"NumberQ", "[", "#", "]"}], "&"}]}], "]"}]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"flattenY", "=", 
+       RowBox[{"Select", "[", 
+        RowBox[{"preFlattenY", ",", 
+         RowBox[{
+          RowBox[{"NumberQ", "[", "#", "]"}], "&"}]}], "]"}]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"(*", 
+       RowBox[{
+        RowBox[{
+        "now", " ", "we", " ", "compute", " ", "the", " ", "distance", " ", 
+         "between", " ", "two", " ", "strength", " ", "maps", " ", 
+         RowBox[{"(", 
+          RowBox[{"now", " ", "vectors"}], ")"}], " ", "A"}], ",", " ", "B"}],
+        "*)"}], "\[IndentingNewLine]", 
+      RowBox[{"(*", 
+       RowBox[{"Towards", " ", "Distance", 
+        RowBox[{"(", 
+         RowBox[{"N1", ",", "N2"}], ")"}]}], "*)"}], "\[IndentingNewLine]", 
+      RowBox[{"(*", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Step", " ", "1"}], ":", " ", 
+         RowBox[{"Computing", " ", "numerator"}], ":", " ", "num"}], " ", "=",
+         " ", 
+        RowBox[{"Abs", "[", 
+         RowBox[{"a_ij", " ", "-", " ", "b_ij"}], "]"}]}], " ", "*)"}], 
+      "\[IndentingNewLine]", 
+      RowBox[{"num", "=", 
+       RowBox[{"Total", "[", 
+        RowBox[{"Abs", "[", 
+         RowBox[{"flattenX", "-", "flattenY"}], "]"}], "]"}]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"(*", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"Step", " ", "2"}], ":", " ", 
+         RowBox[{"Computing", " ", "denominator"}], ":", " ", "den"}], " ", 
+        "=", " ", 
+        RowBox[{"|", " ", 
+         RowBox[{
+          RowBox[{"randomized", 
+           RowBox[{"(", "a_ij", ")"}]}], " ", "+", " ", 
+          RowBox[{"randomized", 
+           RowBox[{"(", "b_ij", ")"}]}]}], " ", "|"}]}], " ", "*)"}], 
+      "\[IndentingNewLine]", 
+      RowBox[{"den", "=", 
+       RowBox[{"Total", "[", 
+        RowBox[{"Abs", "[", 
+         RowBox[{
+          RowBox[{"RandomSample", "[", "flattenX", "]"}], "-", 
+          RowBox[{"RandomSample", "[", "flattenY", "]"}]}], "]"}], "]"}]}], 
+      ";", "\[IndentingNewLine]", 
+      RowBox[{"distance", "=", 
+       RowBox[{"num", "/", "den"}]}], ";", "\[IndentingNewLine]", 
+      "distance"}]}], "\[IndentingNewLine]", "]"}]}]}]], "Input",
+ CellChangeTimes->{{3.727132648899988*^9, 3.727132756733142*^9}, {
+   3.7271330007075853`*^9, 3.727133001090584*^9}, {3.7271339270168962`*^9, 
+   3.72713401199586*^9}, {3.72714237587528*^9, 3.7271424684413433`*^9}, {
+   3.727145090100759*^9, 3.7271451537275753`*^9}, {3.727145184041596*^9, 
+   3.727145395649982*^9}, 3.763996039634061*^9, {3.763996085227523*^9, 
+   3.763996091218836*^9}, {3.763996241992207*^9, 3.7639962446251183`*^9}},
+ CellLabel->
+  "In[167]:=",ExpressionUUID->"7ffdb780-e6d6-4e0d-8636-0e81577f94c4"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"similarity", "[", 
+   RowBox[{"path1_", ",", "path2_", ",", "pathLand_"}], "]"}], ":=", 
+  "\[IndentingNewLine]", 
+  RowBox[{"Module", "[", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{
+     "imp", ",", "strengthMap1", ",", "strengthMap2", ",", "dist", ",", 
+      "sim"}], "}"}], ",", "\[IndentingNewLine]", 
+    RowBox[{"(*", 
+     RowBox[{
+     "Step", " ", "1", "\[IndentingNewLine]", "Import", " ", "the", " ", 
+      "two", " ", "strength", " ", "maps"}], "*)"}], "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"imp", "=", 
+      RowBox[{"importing", "[", 
+       RowBox[{"path1", ",", "path2", ",", "pathLand"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+      "Step", " ", "2", "\[IndentingNewLine]", "Define", " ", "the", " ", 
+       "two", " ", "matrices"}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"strengthMap1", "=", 
+      RowBox[{"imp", "[", 
+       RowBox[{"[", "1", "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"strengthMap2", "=", 
+      RowBox[{"imp", "[", 
+       RowBox[{"[", "2", "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+      "Step", " ", "3", "\[IndentingNewLine]", "Take", " ", "the", " ", 
+       "distance", " ", "between", " ", "them"}], "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"dist", "=", 
+      RowBox[{"distance", "[", 
+       RowBox[{"strengthMap1", ",", "strengthMap2"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+       RowBox[{
+       "The", " ", "similarity", " ", "will", " ", "just", " ", "be", " ", 
+        "S"}], " ", "=", " ", 
+       RowBox[{"1", " ", "-", " ", "d"}]}], " ", "*)"}], 
+     "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+      "As", " ", "a", " ", "result", " ", "give", " ", "me", " ", "the", " ", 
+       "correlation"}], "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"sim", "=", 
+      RowBox[{"1", "-", "dist"}]}], ";", "\[IndentingNewLine]", "sim"}]}], 
+   "\[IndentingNewLine]", "]"}]}]], "Input",
+ CellChangeTimes->{{3.727132777492394*^9, 3.727132954389292*^9}, {
+  3.727133877061933*^9, 3.72713388698145*^9}, {3.727145407912537*^9, 
+  3.727145484278098*^9}},
+ CellLabel->
+  "In[168]:=",ExpressionUUID->"cdf1100c-1a86-42ef-8374-7e415d9a38f2"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["run", "Subsubsection",
+ CellChangeTimes->{{3.7271329649922733`*^9, 
+  3.727132971429935*^9}},ExpressionUUID->"84083053-1e83-4931-8c5d-\
+6fb5ece211ba"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"similarity", "[", 
+  RowBox[{"pathStrengthMap1", ",", "pathStrengthMap2", ",", "pathLand"}], 
+  "]"}]], "Input",
+ CellChangeTimes->{{3.727132974135716*^9, 3.727132980508189*^9}, {
+  3.727133905460454*^9, 3.727133905723201*^9}, {3.727145499139893*^9, 
+  3.72714550022655*^9}},
+ CellLabel->
+  "In[169]:=",ExpressionUUID->"bd3d8875-a397-4a60-bd47-725f9c25cfa7"],
+
+Cell[BoxData["0.7220688699898483`"], "Output",
+ CellChangeTimes->{{3.727132981199956*^9, 3.72713300734193*^9}, {
+   3.727133851770051*^9, 3.7271338538430033`*^9}, 3.7271339146619062`*^9, {
+   3.72713399712274*^9, 3.727134026329652*^9}, 3.727145508811657*^9, 
+   3.7639961107655582`*^9, 3.7639963197942057`*^9, 3.76399757279136*^9, 
+   3.763997620272985*^9, 3.763997713765069*^9},
+ CellLabel->
+  "Out[169]=",ExpressionUUID->"9658f418-2d23-4085-aa8d-18de481e9074"]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1418, 787},
+WindowMargins->{{9, Automatic}, {Automatic, 0}},
+PrintingCopies->1,
+PrintingPageRange->{1, Automatic},
+Magnification:>1.25 Inherited,
+FrontEndVersion->"11.3 for Mac OS X x86 (32-bit, 64-bit Kernel) (March 5, \
+2018)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 225, 4, 37, "Input",ExpressionUUID->"8a35848a-77d6-4996-bd0d-ec477ad71b31"],
+Cell[786, 26, 898, 21, 332, "Text",ExpressionUUID->"160e70ad-4a6c-455b-a6e9-b7b54d0ad998"],
+Cell[1687, 49, 1291, 33, 142, "Input",ExpressionUUID->"a1a21689-ac0d-479c-a333-4b82ff349854"],
+Cell[CellGroupData[{
+Cell[3003, 86, 183, 3, 56, "Subsubsection",ExpressionUUID->"991c2b72-49c7-4432-893b-571c23ec6cb4"],
+Cell[3189, 91, 3182, 74, 506, "Input",ExpressionUUID->"db424e7c-c35a-4c53-a6d2-60a0ab4a9d75"],
+Cell[6374, 167, 4871, 114, 533, "Input",ExpressionUUID->"7ffdb780-e6d6-4e0d-8636-0e81577f94c4"],
+Cell[11248, 283, 2323, 57, 480, "Input",ExpressionUUID->"cdf1100c-1a86-42ef-8374-7e415d9a38f2"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[13608, 345, 156, 3, 56, "Subsubsection",ExpressionUUID->"84083053-1e83-4931-8c5d-6fb5ece211ba"],
+Cell[CellGroupData[{
+Cell[13789, 352, 382, 8, 37, "Input",ExpressionUUID->"bd3d8875-a397-4a60-bd47-725f9c25cfa7"],
+Cell[14174, 362, 462, 7, 42, "Output",ExpressionUUID->"9658f418-2d23-4085-aa8d-18de481e9074"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
